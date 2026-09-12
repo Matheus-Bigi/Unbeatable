@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=7";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=7";
-import { PredictionEngine } from "./predictionEngine.js?v=7";
-import { CommitmentEngine } from "./commitmentEngine.js?v=7";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=7";
+import { classifyFrame } from "./gestureClassifier.js?v=8";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=8";
+import { PredictionEngine } from "./predictionEngine.js?v=8";
+import { CommitmentEngine } from "./commitmentEngine.js?v=8";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=8";
 
 export const RoundState = {
   READY: "READY",
@@ -72,6 +72,10 @@ export class GameEngine {
     // goMs (see CommitmentEngine.update), not off when the countdown began.
     this.countdownStartMs = now + PREP_MS;
     this.goMs = this.countdownStartMs + 3 * COUNTDOWN_STEP_MS;
+    // When "1" is called -- real throw motion normally starts around here,
+    // not after "GO" finishes, so the commitment engine treats anything
+    // from this point on as a normal read, not an early anomaly.
+    this.oneMs = this.goMs - COUNTDOWN_STEP_MS;
     this.deliveryDeadline = this.goMs + this.config.deliveryWindowMs;
     this.effectiveDeadline = this.deliveryDeadline;
     this.gracedLate = false;
@@ -140,7 +144,7 @@ export class GameEngine {
       const ema = this.prediction.update(frame.probs, this.motion.stability());
       this.callbacks.onProb?.(ema);
 
-      const committed = this.commitment.update(ema, nowMs, this.goMs);
+      const committed = this.commitment.update(ema, nowMs, this.goMs, this.oneMs);
       if (committed && !this.machineMove) this._lockMachineMove(committed);
     }
 
@@ -184,7 +188,16 @@ export class GameEngine {
     this.finalPlayerMove = ranked[0]?.[0] ?? this.commitment.committed?.label ?? null;
 
     if (!this.machineMove) {
-      const { move } = chooseMachineMove(null);
+      // Nothing cleared the strict commit threshold+streak in time -- rather
+      // than guess blind (a coin flip that handed the player an easy win far
+      // too often), fall back to whichever gesture was most common among
+      // already-observed frames. This is the same causal, already-seen data
+      // the commitment engine had access to, just read with a softer bar
+      // than its confidence+streak gate -- not a peek into the future. Only
+      // a genuinely blank read (every recent frame was "uncertain") falls
+      // all the way back to a blind guess.
+      const softGuess = ranked[0]?.[0] ?? null;
+      const { move } = chooseMachineMove(softGuess ? { label: softGuess } : null);
       this.machineMove = move;
       this._machineReactionMs = this.config.deliveryWindowMs;
     }
@@ -217,7 +230,7 @@ export class GameEngine {
       playerMove,
       machineMove: this.machineMove,
       reactionMs,
-      beforeGo: committed?.beforeGo ?? false,
+      tooEarly: committed?.tooEarly ?? false,
       late: this.gracedLate,
       lateChange: this.commitment.lateChangeDetected,
       score: { ...this.score },

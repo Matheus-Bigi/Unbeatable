@@ -24,8 +24,13 @@ export class CommitmentEngine {
    *   to this, not to when the countdown started, so a resting/neutral
    *   hand shape early in the countdown can never be mistaken for the
    *   player's real throw.
+   * @param oneMs when "1" fires -- real throw motion normally starts around
+   *   here, not after "GO" finishes, so a commit any time from "1" onward
+   *   is a normal read, not an anomaly. Only a commit before "1" (which the
+   *   armBeforeGoMs gate below should already prevent under normal tuning)
+   *   is genuinely a too-early false read worth flagging.
    */
-  update(ema, nowMs, goMs) {
+  update(ema, nowMs, goMs, oneMs) {
     const [topLabel, topProb] = Object.entries(ema).sort((a, b) => b[1] - a[1])[0];
 
     if (this.committed) {
@@ -53,7 +58,7 @@ export class CommitmentEngine {
       // A floor rather than a hard 0 -- an exact "0.000s" every time reads
       // as broken/fake rather than "impossibly fast".
       const reactionMs = Math.max(10, nowMs - goMs);
-      this.committed = { label: topLabel, prob: topProb, t: nowMs, reactionMs, beforeGo: nowMs < goMs };
+      this.committed = { label: topLabel, prob: topProb, t: nowMs, reactionMs, tooEarly: nowMs < oneMs };
     }
 
     return this.committed;

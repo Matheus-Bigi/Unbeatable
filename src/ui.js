@@ -24,7 +24,7 @@ export function setMachineHand(el, emoji, { reveal = false } = {}) {
   }
 }
 
-export function renderRoundBanner(root, { verdict = "", line = "", reactionMs = null, kind = null, beforeGo = false, late = false } = {}) {
+export function renderRoundBanner(root, { verdict = "", line = "", reactionMs = null, kind = null, tooEarly = false, late = false } = {}) {
   root.classList.remove("win", "lose");
   if (kind) root.classList.add(kind);
   root.querySelector(".round-verdict").textContent = verdict;
@@ -37,11 +37,11 @@ export function renderRoundBanner(root, { verdict = "", line = "", reactionMs = 
   }
   const seconds = `${(reactionMs / 1000).toFixed(3)}s`;
   // Surface *why* a reaction time looks the way it does, rather than just
-  // showing a bare number: a very fast time can be a genuine early read of
-  // the player's throw (predicted before GO), and a slow one can be a
-  // graced late delivery -- both are legitimate, but neither should look
-  // like an ordinary in-window reaction.
-  const tag = beforeGo ? " ⚡ PREDICTED EARLY" : late ? " ⏱ RAN LATE" : "";
+  // showing a bare number: committing anywhere from "1" onward is a normal
+  // read (real throws start around "1", not after "GO" finishes) and isn't
+  // flagged. Only a genuinely too-early false read (before "1") or a graced
+  // late delivery gets called out -- both are edge cases, not the norm.
+  const tag = tooEarly ? " ⚡ TOO EARLY" : late ? " ⏱ RAN LATE" : "";
   reactionEl.textContent = seconds + tag;
 }
 

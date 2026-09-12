@@ -13,11 +13,12 @@ export const DEFAULT_DIFFICULTY = {
   // started). This is the single most important knob for the "unbeatable"
   // feeling: a resting/neutral hand shape during READY/3/2 can easily read
   // as a confident class through pure softmax sharpening, even though
-  // nothing about the player's real throw has happened yet. Gating the
-  // earliest possible commit to just before GO means the engine can only
-  // ever be reacting to the player's actual final gesture forming, not to
-  // whatever their hand happened to rest as seconds earlier.
-  armBeforeGoMs: 700,
+  // nothing about the player's real throw has happened yet. Real players
+  // start their throw motion around "1", not after "GO" finishes, so the
+  // window opens exactly there (matches COUNTDOWN_STEP_MS in gameEngine.js)
+  // -- late enough that the engine is never reacting to a resting pose from
+  // seconds earlier, early enough to catch the real throw as it happens.
+  armBeforeGoMs: 900,
   // Player has this long after GO to deliver a final, readable gesture.
   // Combined with armBeforeGoMs this defines a ~2s window straddling GO
   // during which the Machine is allowed to commit.

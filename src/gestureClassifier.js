@@ -1,4 +1,4 @@
-import { sub, angleBetween, clamp01 } from "./landmarkUtils.js?v=7";
+import { sub, angleBetween, clamp01 } from "./landmarkUtils.js?v=8";
 
 // [mcp, pip, tip] indices per MediaPipe hand landmark layout.
 const FINGERS = {
@@ -22,8 +22,19 @@ function fingerExtension(landmarks, [mcp, pip, tip]) {
 const PATTERNS = {
   rock: [0, 0, 0, 0],
   paper: [1, 1, 1, 1],
-  scissors: [1, 1, 0, 0],
+  // Ring/pinky rarely reach full fist-level curl (0) while the same hand
+  // holds index/middle straight out for scissors -- targeting a realistic
+  // partial curl (instead of demanding the same curl as a full fist) keeps
+  // an honest scissors pose from drifting toward PAPER just because ring/
+  // pinky didn't fully close.
+  scissors: [1, 1, 0.3, 0.3],
 };
+
+// Index/middle read "extended" in both PAPER and SCISSORS, so they carry no
+// signal that tells the two apart -- ring/pinky are the only dimension that
+// does. Weight them more heavily so that one real discriminating signal
+// isn't diluted by two dimensions that agree between the classes anyway.
+const WEIGHTS = [0.8, 0.8, 1.3, 1.3];
 
 const CONFIDENT_THRESHOLD = 0.55;
 // Softmax temperature over squared distance-to-pattern. Low enough that a
@@ -48,7 +59,7 @@ export function classifyFrame(landmarks) {
 
   const score = {};
   for (const [name, pattern] of Object.entries(PATTERNS)) {
-    const sqDist = pattern.reduce((sum, p, i) => sum + (p - vector[i]) ** 2, 0);
+    const sqDist = pattern.reduce((sum, p, i) => sum + WEIGHTS[i] * (p - vector[i]) ** 2, 0);
     score[name] = Math.exp(-sqDist / TEMPERATURE);
   }
   const total = score.rock + score.paper + score.scissors;

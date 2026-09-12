@@ -1,12 +1,12 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=7";
-import { HandTracker } from "./handTracker.js?v=7";
-import { classifyFrame } from "./gestureClassifier.js?v=7";
-import { GameEngine, RoundState } from "./gameEngine.js?v=7";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=7";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=7";
-import * as storage from "./storage.js?v=7";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=7";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=7";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=8";
+import { HandTracker } from "./handTracker.js?v=8";
+import { classifyFrame } from "./gestureClassifier.js?v=8";
+import { GameEngine, RoundState } from "./gameEngine.js?v=8";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=8";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=8";
+import * as storage from "./storage.js?v=8";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=8";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=8";
 
 const el = (id) => document.getElementById(id);
 
@@ -471,7 +471,7 @@ async function enterPlay({ autoStart = false } = {}) {
         machineHandEl.classList.remove("thinking");
         setMachineHand(machineHandEl, moveEmoji(move), { reveal: true });
       },
-      onRoundResult({ outcome, playerMove, machineMove, reactionMs, beforeGo, late, lateChange, score, matchOver }) {
+      onRoundResult({ outcome, playerMove, machineMove, reactionMs, tooEarly, late, lateChange, score, matchOver }) {
         disarmStuckWatchdog();
         resultBeep(outcome);
         setMachineHand(playerHandEl, playerMove ? moveEmoji(playerMove) : "❓", { reveal: true });
@@ -495,7 +495,7 @@ async function enterPlay({ autoStart = false } = {}) {
           kind = null;
           line = pickLine(MACHINE_LINES.draw);
         }
-        renderRoundBanner(roundBannerEl, { verdict, line, reactionMs, kind, beforeGo, late });
+        renderRoundBanner(roundBannerEl, { verdict, line, reactionMs, kind, tooEarly, late });
       },
       onMatchResult(result) {
         storage.recordMatch(playerName);
