@@ -97,7 +97,20 @@ export class GameEngine {
 
   _tick() {
     if (this.state === RoundState.READY || this.state === RoundState.RESULT) return;
-    const nowMs = performance.now();
+    // This runs every animation frame for the whole match. An uncaught
+    // error on a single frame (camera hiccup, an unready video element,
+    // anything unanticipated on a real device) must never kill the loop --
+    // that would silently freeze the round with no visible error. Worst
+    // case here is one skipped frame; the round still resolves at its
+    // delivery deadline regardless.
+    try {
+      this._tickInner(performance.now());
+    } catch (err) {
+      console.warn("[UNBEATABLE] frame processing error, skipping this frame:", err);
+    }
+  }
+
+  _tickInner(nowMs) {
     const detection = this.tracker.detect(this.videoEl, nowMs);
 
     this.callbacks.onFrame?.(detection);

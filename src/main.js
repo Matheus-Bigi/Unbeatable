@@ -37,6 +37,12 @@ const statStreak = el("stat-streak");
 const bars = { rock: el("bar-rock"), paper: el("bar-paper"), scissors: el("bar-scissors") };
 const brightnessCanvas = document.createElement("canvas");
 
+// The live probability bars and the play-screen hand-skeleton overlay are
+// tuning aids, not part of the player-facing experience -- only show them
+// when explicitly asked for (e.g. testing on a real device with ?debug).
+const DEBUG = new URLSearchParams(location.search).has("debug");
+if (!DEBUG) el("prob-bars").classList.add("hidden");
+
 const tracker = new HandTracker();
 let cameraStream = null;
 let playerName = "";
@@ -69,7 +75,7 @@ nameContinueBtn.addEventListener("click", async () => {
 
 readyBtn.addEventListener("click", () => {
   stopCameraCheckLoop();
-  enterPlay();
+  enterPlay().catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
 });
 
 nextRoundBtn.addEventListener("click", () => {
@@ -164,9 +170,21 @@ function stopCameraCheckLoop() {
   checkLoopRunning = false;
 }
 
-function enterPlay() {
+async function waitUntilReady(videoEl) {
+  if (videoEl.readyState >= 2) return;
+  await new Promise((resolve) => {
+    const onReady = () => {
+      videoEl.removeEventListener("loadeddata", onReady);
+      resolve();
+    };
+    videoEl.addEventListener("loadeddata", onReady);
+  });
+}
+
+async function enterPlay() {
   playVideo.srcObject = cameraStream;
-  playVideo.play();
+  await playVideo.play();
+  await waitUntilReady(playVideo);
   showScreen("screen-play");
   roundsPlayedInMatch = 0;
   hudRound.textContent = "Round 1";
@@ -193,7 +211,7 @@ function enterPlay() {
         updateProbBars(bars, ema);
       },
       onFrame(detection) {
-        drawSkeleton(playOverlay, detection ? detection.landmarks : null);
+        if (DEBUG) drawSkeleton(playOverlay, detection ? detection.landmarks : null);
       },
       onMachineCommit({ move }) {
         setMachineHand(machineHandEl, moveEmoji(move), { reveal: true });
