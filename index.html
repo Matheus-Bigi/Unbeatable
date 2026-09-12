@@ -4,7 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>UNBEATABLE</title>
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <div id="app">
@@ -56,7 +62,7 @@
         <canvas id="overlay-play"></canvas>
       </div>
       <div class="machine-row">
-        <div class="machine-hand" id="machine-hand">🤖</div>
+        <div class="machine-hand" id="machine-hand">◎</div>
         <div class="vs">VS</div>
         <div class="player-hand" id="player-hand">🖐️</div>
       </div>
@@ -67,7 +73,11 @@
         <div class="prob-row"><span>PAPER</span><div class="bar"><i id="bar-paper"></i></div></div>
         <div class="prob-row"><span>SCISSORS</span><div class="bar"><i id="bar-scissors"></i></div></div>
       </div>
-      <div id="round-banner" class="round-banner"></div>
+      <div id="round-banner" class="round-banner">
+        <div class="round-verdict"></div>
+        <div class="round-line"></div>
+        <div class="round-reaction"></div>
+      </div>
       <button id="btn-next-round" class="btn btn-primary hidden">NEXT ROUND</button>
       <div id="stuck-help" class="stuck-help hidden">
         <p>That round didn't resolve. Sorry about that.</p>
@@ -90,6 +100,6 @@
     </section>
 
   </div>
-  <script type="module" src="src/main.js?v=3"></script>
+  <script type="module" src="src/main.js?v=4"></script>
 </body>
 </html>

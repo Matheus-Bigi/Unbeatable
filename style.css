@@ -1,13 +1,17 @@
 :root {
   color-scheme: dark;
-  --bg: #05070d;
-  --bg-alt: #10141f;
-  --fg: #f4f6fb;
-  --muted: #8b93a7;
-  --accent: #4f8dff;
-  --danger: #ff4f6d;
-  --win: #35d68a;
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --void: #14110e;
+  --panel: #1d1915;
+  --line: #332d24;
+  --paper: #f2ecdd;
+  --stone: #8b8478;
+  --signal: #ff9f1c;
+  --win: #6fa96a;
+  --lose: #c1443c;
+
+  --font-display: "Oswald", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --font-body: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -15,11 +19,24 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--void);
+  color: var(--paper);
   height: 100%;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-body);
+}
+
+/* A very faint scanline texture -- atmosphere for a game about a machine
+   watching you through a lens, without competing with content. */
+body {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(242, 236, 221, 0.02) 0px,
+    rgba(242, 236, 221, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 #app {
@@ -47,37 +64,91 @@ html, body {
   display: flex;
 }
 
-.title {
-  font-size: clamp(2.4rem, 9vw, 4rem);
-  letter-spacing: 0.06em;
-  margin: 0;
-  font-weight: 800;
-  background: linear-gradient(135deg, #fff, var(--accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+#screen-home { position: relative; }
+#screen-home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 159, 28, 0.1), transparent 55%);
+}
+/* A faint echo of the camera viewfinder frame, even before the camera is
+   on -- the premise is "it's already watching you." */
+#screen-home::after {
+  content: "";
+  position: absolute;
+  inset: 28px;
+  pointer-events: none;
+  opacity: 0.3;
+  --bl: 26px;
+  --bw: 1.5px;
+  background:
+    linear-gradient(var(--stone), var(--stone)) top left / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) top left / var(--bw) var(--bl) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) top right / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) top right / var(--bw) var(--bl) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) bottom left / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) bottom left / var(--bw) var(--bl) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) bottom right / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--stone), var(--stone)) bottom right / var(--bw) var(--bl) no-repeat;
 }
 
-.subtitle { margin: 0; color: var(--muted); font-size: 1.1rem; }
-.tagline { margin: 0 0 12px; color: var(--fg); opacity: 0.8; font-style: italic; }
-.footnote { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.6rem, 10vw, 4.2rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+  color: var(--paper);
+}
+
+.title::after {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  background: var(--signal);
+  margin: 14px auto 0;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.subtitle { margin: 0; color: var(--stone); font-size: 1.05rem; letter-spacing: 0.02em; }
+.tagline { margin: 0 0 12px; color: var(--paper); opacity: 0.75; font-style: italic; }
+.footnote {
+  color: var(--stone);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
 
 .btn {
   appearance: none;
-  border: none;
-  border-radius: 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   padding: 16px 28px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   min-width: 220px;
   touch-action: manipulation;
 }
 
-.btn-primary { background: var(--accent); color: #04101f; }
-.btn-primary:disabled { opacity: 0.4; }
-.btn-ghost { background: transparent; color: var(--muted); border: 1px solid #2a3040; }
+.btn-primary { background: var(--signal); color: var(--void); }
+.btn-primary:disabled { opacity: 0.35; }
+.btn-ghost { background: transparent; color: var(--stone); border-color: var(--line); }
 .btn-back { margin-top: 4px; }
 .hidden { display: none !important; }
 
@@ -85,11 +156,12 @@ html, body {
   width: 100%;
   max-width: 320px;
   padding: 16px;
-  font-size: 1.1rem;
-  border-radius: 12px;
-  border: 1px solid #2a3040;
-  background: var(--bg-alt);
-  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--paper);
   text-align: center;
   letter-spacing: 0.08em;
 }
@@ -99,10 +171,32 @@ html, body {
   width: 100%;
   max-width: 420px;
   aspect-ratio: 3/4;
-  border-radius: 20px;
+  border-radius: 6px;
   overflow: hidden;
   background: #000;
-  border: 1px solid #232838;
+  border: 1px solid var(--line);
+}
+
+/* The signature element: a viewfinder frame around the hand the Machine
+   is reading, in place of a soft rounded "app card" -- this is a camera
+   game, so the camera's own instrument is the visual language. */
+.camera-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --bl: 22px;
+  --bw: 2px;
+  background:
+    linear-gradient(var(--signal), var(--signal)) top left / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) top left / var(--bw) var(--bl) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) top right / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) top right / var(--bw) var(--bl) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) bottom left / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) bottom left / var(--bw) var(--bl) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) bottom right / var(--bl) var(--bw) no-repeat,
+    linear-gradient(var(--signal), var(--signal)) bottom right / var(--bw) var(--bl) no-repeat;
+  opacity: 0.85;
 }
 
 .camera-wrap video {
@@ -124,26 +218,35 @@ html, body {
 .hand-guide {
   position: absolute;
   inset: 18% 22%;
-  border: 2px dashed rgba(79, 141, 255, 0.55);
-  border-radius: 24px;
+  border: 1.5px dashed rgba(255, 159, 28, 0.5);
+  border-radius: 16px;
   pointer-events: none;
 }
 
-.camera-status { font-weight: 600; min-height: 1.4em; }
+.camera-status {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  min-height: 1.4em;
+}
 
 .checklist {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
-  gap: 14px;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--stone);
 }
 
-.checklist li { padding: 6px 12px; border-radius: 999px; background: var(--bg-alt); border: 1px solid #232838; }
+.checklist li { padding: 6px 12px; border-radius: 4px; background: var(--panel); border: 1px solid var(--line); }
 .checklist li.ok { color: var(--win); border-color: var(--win); }
 
 #screen-play { padding-top: max(16px, env(safe-area-inset-top)); gap: 10px; }
@@ -154,30 +257,25 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 700;
-  color: var(--muted);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  color: var(--stone);
 }
 
 .btn-exit {
   appearance: none;
-  border: 1px solid #2a3040;
-  background: var(--bg-alt);
-  color: var(--muted);
-  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--stone);
+  border-radius: 4px;
   width: 34px;
   height: 34px;
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
 }
-
-.stuck-help {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.stuck-help p { color: var(--muted); margin: 0; }
 
 .play-camera { max-width: 280px; aspect-ratio: 4/5; }
 
@@ -195,6 +293,11 @@ html, body {
   transition: transform 0.12s ease-out;
 }
 
+/* Idle state is a plain reticle glyph (muted, dormant) rather than a
+   colorful emoji -- the contrast with the full-color rock/paper/scissors
+   emoji at reveal is part of the "it just locked on" moment. */
+.machine-hand { color: var(--stone); }
+
 .machine-hand.reveal { animation: reveal-pop 0.22s ease-out; }
 @keyframes reveal-pop {
   0% { transform: scale(0.4) rotate(-10deg); }
@@ -204,19 +307,26 @@ html, body {
 
 /* Plays while the Machine has already decided internally but before the
    reveal -- signals "it's already reacting" without giving away the move. */
-.machine-hand.thinking { animation: think-pulse 0.5s ease-in-out infinite; }
+.machine-hand.thinking { animation: think-pulse 0.5s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(255, 159, 28, 0.55)); }
 @keyframes think-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
 }
 
-.vs { color: var(--muted); font-weight: 800; font-size: 0.9rem; }
+.vs {
+  color: var(--stone);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+}
 
 .countdown {
+  font-family: var(--font-display);
   font-size: 3.4rem;
-  font-weight: 800;
+  font-weight: 700;
   min-height: 1.2em;
-  color: var(--accent);
+  color: var(--signal);
 }
 
 .prob-bars {
@@ -225,24 +335,62 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 0.72rem;
-  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: var(--stone);
 }
 
 .prob-row { display: flex; align-items: center; gap: 8px; }
 .prob-row span { width: 62px; text-align: right; }
-.bar { flex: 1; height: 8px; background: var(--bg-alt); border-radius: 4px; overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0%; background: var(--accent); transition: width 0.06s linear; }
+.bar { flex: 1; height: 8px; background: var(--panel); border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0%; background: var(--signal); transition: width 0.06s linear; }
 
 .round-banner {
-  font-size: 1.4rem;
-  font-weight: 800;
-  min-height: 1.4em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 4.5em;
 }
-.round-banner.win { color: var(--win); }
-.round-banner.lose { color: var(--danger); }
+.round-verdict {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.round-banner.win .round-verdict { color: var(--win); }
+.round-banner.lose .round-verdict { color: var(--lose); }
+.round-line {
+  font-style: italic;
+  color: var(--stone);
+  font-size: 0.9rem;
+  max-width: 320px;
+}
+.round-reaction {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--signal);
+  letter-spacing: 0.03em;
+}
 
-.match-score { font-size: 2.6rem; font-weight: 800; }
+.stuck-help {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.stuck-help p { color: var(--stone); margin: 0; font-family: var(--font-mono); font-size: 0.85rem; }
+
+#match-title.win { color: var(--win); }
+#match-title.lose { color: var(--lose); }
+
+.match-score {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.6rem;
+}
 
 .stats-grid {
   display: flex;
@@ -251,8 +399,14 @@ html, body {
   flex-wrap: wrap;
 }
 .stats-grid > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.stats-grid span { font-size: 1.3rem; font-weight: 700; }
-.stats-grid label { font-size: 0.72rem; color: var(--muted); }
+.stats-grid span { font-family: var(--font-mono); font-size: 1.2rem; font-weight: 600; color: var(--signal); }
+.stats-grid label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
 
 @media (max-width: 380px) {
   .machine-hand, .player-hand { font-size: 3.2rem; }
@@ -271,4 +425,12 @@ html, body {
   .machine-hand, .player-hand { font-size: 2.6rem; }
   .countdown { font-size: 2rem; }
   .match-score { font-size: 1.8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

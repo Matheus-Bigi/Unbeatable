@@ -24,10 +24,10 @@ Alternative for faster local iteration on a Mac: `npx serve .` and open `https:/
 
 ## What to expect from this MVP
 
-- One difficulty, tuned aggressive (see `src/difficultyConfig.js` — `commitThreshold`, `commitFrames`, `armDelayMs` are the main knobs).
+- One difficulty, tuned aggressive (see `src/difficultyConfig.js` — `commitThreshold`, `commitFrames`, `armBeforeGoMs` are the main knobs).
 - A live probability bar for ROCK/PAPER/SCISSORS during play, and a hand-landmark skeleton overlay — both intentionally left visible so you can see *why* the Machine reacted when it did, while we tune it. These can be hidden once the timing feels right.
 - The Machine's win rate comes entirely from real (imperfect) gesture recognition — nothing is rigged, so you should win sometimes.
-- Not yet built: Pass & Play, leaderboard, multiple difficulty levels, richer Machine avatar art, sound/haptics. See the plan this was built from for the intended follow-up phases.
+- Not yet built: Pass & Play, leaderboard, multiple difficulty levels, richer Machine avatar art, haptics. See the plan this was built from for the intended follow-up phases.
 
 ## Reporting back for tuning
 

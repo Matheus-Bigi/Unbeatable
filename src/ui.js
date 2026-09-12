@@ -24,10 +24,12 @@ export function setMachineHand(el, emoji, { reveal = false } = {}) {
   }
 }
 
-export function setRoundBanner(el, text, kind) {
-  el.textContent = text;
-  el.classList.remove("win", "lose");
-  if (kind) el.classList.add(kind);
+export function renderRoundBanner(root, { verdict = "", line = "", reactionMs = null, kind = null } = {}) {
+  root.classList.remove("win", "lose");
+  if (kind) root.classList.add(kind);
+  root.querySelector(".round-verdict").textContent = verdict;
+  root.querySelector(".round-line").textContent = line ? `“${line}”` : "";
+  root.querySelector(".round-reaction").textContent = typeof reactionMs === "number" ? `${(reactionMs / 1000).toFixed(3)}s` : "";
 }
 
 // 21-point MediaPipe hand skeleton connections, for the debug overlay.
@@ -45,7 +47,7 @@ export function drawSkeleton(canvas, landmarks) {
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   if (!landmarks) return;
-  ctx.strokeStyle = "rgba(79,141,255,0.9)";
+  ctx.strokeStyle = "rgba(255,159,28,0.9)";
   ctx.lineWidth = 2;
   for (const [a, b] of CONNECTIONS) {
     const p1 = landmarks[a];

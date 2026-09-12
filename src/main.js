@@ -1,11 +1,11 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=3";
-import { HandTracker } from "./handTracker.js?v=3";
-import { GameEngine, RoundState } from "./gameEngine.js?v=3";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=3";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=3";
-import * as storage from "./storage.js?v=3";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, setRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=3";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=3";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=4";
+import { HandTracker } from "./handTracker.js?v=4";
+import { GameEngine, RoundState } from "./gameEngine.js?v=4";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=4";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=4";
+import * as storage from "./storage.js?v=4";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=4";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=4";
 
 const el = (id) => document.getElementById(id);
 
@@ -240,9 +240,9 @@ async function enterPlay() {
     config: DEFAULT_DIFFICULTY,
     callbacks: {
       onRoundReset() {
-        setRoundBanner(roundBannerEl, "", null);
+        renderRoundBanner(roundBannerEl);
         machineHandEl.classList.remove("thinking");
-        setMachineHand(machineHandEl, "🤖");
+        setMachineHand(machineHandEl, "◎");
         playerHandEl.textContent = "🖐️";
         countdownEl.textContent = "";
         updateProbBars(bars, { rock: 1 / 3, paper: 1 / 3, scissors: 1 / 3 });
@@ -276,23 +276,23 @@ async function enterPlay() {
         storage.recordRound(playerName, { outcome, reactionMs });
         if (!matchOver) nextRoundBtn.classList.remove("hidden");
 
-        let text;
+        let verdict;
         let kind;
         let line;
         if (outcome === "player") {
-          text = "YOU WIN";
+          verdict = "YOU WIN";
           kind = "win";
           line = pickLine(MACHINE_LINES.playerWin);
         } else if (outcome === "machine") {
-          text = "MACHINE WINS";
+          verdict = "MACHINE WINS";
           kind = "lose";
           line = lateChange ? pickLine(MACHINE_LINES.lateChange) : pickLine(MACHINE_LINES.machineWin);
         } else {
-          text = "DRAW";
+          verdict = "DRAW";
           kind = null;
           line = pickLine(MACHINE_LINES.draw);
         }
-        setRoundBanner(roundBannerEl, `${text} — "${line}" (${(reactionMs / 1000).toFixed(3)}s)`, kind);
+        renderRoundBanner(roundBannerEl, { verdict, line, reactionMs, kind });
       },
       onMatchResult(result) {
         pendingMatchResult = result;
@@ -332,6 +332,8 @@ function showMatchScreen(result) {
   const avg = storage.averageReactionMs(stats);
 
   matchTitle.textContent = result.winner === "player" ? "YOU WIN" : "MACHINE WINS";
+  matchTitle.classList.toggle("win", result.winner === "player");
+  matchTitle.classList.toggle("lose", result.winner === "machine");
   matchScore.textContent = `${result.score.player} — ${result.score.machine}`;
   statFastest.textContent = fastest !== null ? `${(fastest / 1000).toFixed(3)}s` : "-";
   statAverage.textContent = avg !== null ? `${(avg / 1000).toFixed(3)}s` : "-";

@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=3";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=3";
-import { PredictionEngine } from "./predictionEngine.js?v=3";
-import { CommitmentEngine } from "./commitmentEngine.js?v=3";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=3";
+import { classifyFrame } from "./gestureClassifier.js?v=4";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=4";
+import { PredictionEngine } from "./predictionEngine.js?v=4";
+import { CommitmentEngine } from "./commitmentEngine.js?v=4";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=4";
 
 export const RoundState = {
   READY: "READY",
@@ -67,10 +67,9 @@ export class GameEngine {
     this.callbacks.onRoundReset?.();
 
     const now = performance.now();
-    // countdownStartMs anchors "3" itself (not the READY beat before it) --
-    // that's the moment motion analysis is allowed to start counting toward
-    // a commit, since the player is presumably still settling into place
-    // during READY.
+    // countdownStartMs anchors "3" itself (not the READY beat before it),
+    // purely to compute goMs -- the commitment engine gates purely off
+    // goMs (see CommitmentEngine.update), not off when the countdown began.
     this.countdownStartMs = now + PREP_MS;
     this.goMs = this.countdownStartMs + 3 * COUNTDOWN_STEP_MS;
     this.deliveryDeadline = this.goMs + this.config.deliveryWindowMs;
@@ -139,7 +138,7 @@ export class GameEngine {
       const ema = this.prediction.update(frame.probs, this.motion.stability());
       this.callbacks.onProb?.(ema);
 
-      const committed = this.commitment.update(ema, nowMs, this.countdownStartMs, this.goMs);
+      const committed = this.commitment.update(ema, nowMs, this.goMs);
       if (committed && !this.machineMove) this._lockMachineMove(committed);
     }
 

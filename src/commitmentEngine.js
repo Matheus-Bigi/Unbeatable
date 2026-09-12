@@ -20,10 +20,12 @@ export class CommitmentEngine {
   /**
    * @param ema {rock,paper,scissors} smoothed probabilities
    * @param nowMs current frame timestamp
-   * @param countdownStartMs when "3" first appeared
-   * @param goMs when "GO" fired (for reaction-time bookkeeping)
+   * @param goMs when "GO" fires (or fired) -- commitment is gated relative
+   *   to this, not to when the countdown started, so a resting/neutral
+   *   hand shape early in the countdown can never be mistaken for the
+   *   player's real throw.
    */
-  update(ema, nowMs, countdownStartMs, goMs) {
+  update(ema, nowMs, goMs) {
     const [topLabel, topProb] = Object.entries(ema).sort((a, b) => b[1] - a[1])[0];
 
     if (this.committed) {
@@ -36,7 +38,7 @@ export class CommitmentEngine {
       return this.committed;
     }
 
-    if (nowMs - countdownStartMs < this.config.armDelayMs) return null;
+    if (nowMs < goMs - this.config.armBeforeGoMs) return null;
 
     if (topProb >= this.config.commitThreshold) {
       this.streak[topLabel] = (this.streak[topLabel] || 0) + 1;
@@ -45,12 +47,10 @@ export class CommitmentEngine {
     }
 
     if (this.streak[topLabel] >= this.config.commitFrames) {
-      this.committed = {
-        label: topLabel,
-        prob: topProb,
-        t: nowMs,
-        reactionMs: Math.max(0, nowMs - goMs),
-      };
+      // A floor rather than a hard 0 -- an exact "0.000s" every time reads
+      // as broken/fake rather than "impossibly fast".
+      const reactionMs = Math.max(10, nowMs - goMs);
+      this.committed = { label: topLabel, prob: topProb, t: nowMs, reactionMs };
     }
 
     return this.committed;
