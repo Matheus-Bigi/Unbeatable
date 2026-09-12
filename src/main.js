@@ -1,12 +1,12 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=8";
-import { HandTracker } from "./handTracker.js?v=8";
-import { classifyFrame } from "./gestureClassifier.js?v=8";
-import { GameEngine, RoundState } from "./gameEngine.js?v=8";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=8";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=8";
-import * as storage from "./storage.js?v=8";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=8";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=8";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=9";
+import { HandTracker } from "./handTracker.js?v=9";
+import { classifyFrame } from "./gestureClassifier.js?v=9";
+import { GameEngine, RoundState } from "./gameEngine.js?v=9";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=9";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=9";
+import * as storage from "./storage.js?v=9";
+import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=9";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=9";
 
 const el = (id) => document.getElementById(id);
 
@@ -311,7 +311,7 @@ function enterCalibrationPhase() {
 
 function updateCalibrationPrompt() {
   const target = CALIBRATION_ORDER[calibIndex];
-  calibrationEmoji.textContent = moveEmoji(target);
+  calibrationEmoji.src = handImageSrc(target);
   calibrationLabel.textContent = CALIBRATION_LABELS[target];
 }
 
@@ -445,8 +445,8 @@ async function enterPlay({ autoStart = false } = {}) {
       onRoundReset() {
         renderRoundBanner(roundBannerEl);
         machineHandEl.classList.remove("thinking");
-        setMachineHand(machineHandEl, "◎");
-        playerHandEl.textContent = "";
+        setHandImage(machineHandEl, null);
+        setHandImage(playerHandEl, null);
         countdownEl.textContent = "";
         updateProbBars(bars, { rock: 1 / 3, paper: 1 / 3, scissors: 1 / 3 });
         nextRoundBtn.classList.add("hidden");
@@ -469,12 +469,12 @@ async function enterPlay({ autoStart = false } = {}) {
       },
       onMachineReveal({ move }) {
         machineHandEl.classList.remove("thinking");
-        setMachineHand(machineHandEl, moveEmoji(move), { reveal: true });
+        setHandImage(machineHandEl, move, { reveal: true });
       },
       onRoundResult({ outcome, playerMove, machineMove, reactionMs, tooEarly, late, lateChange, score, matchOver }) {
         disarmStuckWatchdog();
         resultBeep(outcome);
-        setMachineHand(playerHandEl, playerMove ? moveEmoji(playerMove) : "❓", { reveal: true });
+        setHandImage(playerHandEl, playerMove, { reveal: true });
         hudScore.textContent = `${score.player} — ${score.machine}`;
         storage.recordRound(playerName, { outcome, reactionMs });
         if (!matchOver) nextRoundBtn.classList.remove("hidden");

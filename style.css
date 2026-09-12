@@ -298,8 +298,11 @@ h2 {
 }
 
 .calibration-emoji {
-  font-size: 1.8rem;
-  line-height: 1;
+  display: block;
+  height: 2.4rem;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
   animation: calib-pulse 0.9s ease-in-out infinite;
 }
 @keyframes calib-pulse {
@@ -402,21 +405,24 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.6rem;
   line-height: 1;
   transition: transform 0.12s ease-out;
 }
 
-/* A soft dark halo behind whichever emoji is showing -- readable over the
-   player's own moving video feed, present for the Machine's reticle too. */
+.duel-reveal .hand-photo {
+  max-width: 62%;
+  max-height: 55%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+}
+
+/* A soft dark halo behind whichever photo is showing -- readable over the
+   player's own moving video feed, present for the Machine's idle pose too. */
 .duel-reveal:not(:empty) {
   background: radial-gradient(circle, rgba(20, 17, 14, 0.8) 50%, transparent 72%);
 }
-
-/* Idle state is a plain reticle glyph (muted, dormant) rather than a
-   colorful emoji -- the contrast with the full-color rock/paper/scissors
-   emoji at reveal is part of the "it just locked on" moment. */
-.machine-hand { color: var(--stone); }
 
 .duel-reveal.reveal { animation: reveal-pop 0.22s ease-out; }
 @keyframes reveal-pop {
@@ -520,10 +526,6 @@ h2 {
   color: var(--stone);
 }
 
-@media (max-width: 380px) {
-  .duel-reveal { font-size: 2.6rem; }
-}
-
 /* Landscape/panoramic: the portrait-sized stack (tall camera preview +
    large emoji + countdown) is taller than a landscape viewport, and was
    getting clipped. Shrink everything that doesn't need to be huge; the
@@ -535,7 +537,6 @@ h2 {
   .camera-wrap { max-width: 260px; }
   .duel { max-width: 480px; }
   .duel-panel { aspect-ratio: 1/1; }
-  .duel-reveal { font-size: 2.4rem; }
   .countdown { font-size: 2rem; }
   .match-score { font-size: 1.8rem; }
 }

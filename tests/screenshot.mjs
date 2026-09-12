@@ -16,8 +16,8 @@ async function main() {
     document.getElementById("hud-score").textContent = "1 — 1";
     document.getElementById("hud-round").textContent = "Round 3";
     document.getElementById("countdown").textContent = "2";
-    document.getElementById("machine-hand").textContent = "◎";
-    document.getElementById("player-hand").textContent = "🖐️";
+    document.getElementById("machine-hand").innerHTML = '<img class="hand-photo" src="assets/hands/neutral.webp" alt="" />';
+    document.getElementById("player-hand").innerHTML = '<img class="hand-photo" src="assets/hands/neutral.webp" alt="" />';
   });
   await page.waitForTimeout(200);
   await page.screenshot({ path: "/tmp/shot-play.png" });
@@ -28,8 +28,8 @@ async function main() {
     el.querySelector(".round-verdict").textContent = "MACHINE WINS";
     el.querySelector(".round-line").textContent = "“Too slow.”";
     el.querySelector(".round-reaction").textContent = "0.142s";
-    document.getElementById("machine-hand").textContent = "✋";
-    document.getElementById("player-hand").textContent = "✊";
+    document.getElementById("machine-hand").innerHTML = '<img class="hand-photo" src="assets/hands/paper.webp" alt="" />';
+    document.getElementById("player-hand").innerHTML = '<img class="hand-photo" src="assets/hands/rock.webp" alt="" />';
   });
   await page.waitForTimeout(200);
   await page.screenshot({ path: "/tmp/shot-play-result.png" });

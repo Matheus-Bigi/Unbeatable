@@ -1,11 +1,21 @@
-const MOVE_EMOJI = { rock: "✊", paper: "✋", scissors: "✌️" };
+// Real photographed hand poses (rock/paper/scissors + a loose, unformed
+// "neutral" pose used for the idle/thinking state) replace the earlier
+// emoji glyphs everywhere a hand gesture is shown -- the Machine's reveal,
+// the player's reveal, and the gesture-calibration prompt.
+const HAND_IMAGES = {
+  rock: "assets/hands/rock.webp?v=9",
+  paper: "assets/hands/paper.webp?v=9",
+  scissors: "assets/hands/scissors.webp?v=9",
+};
+const NEUTRAL_HAND_IMAGE = "assets/hands/neutral.webp?v=9";
 
 export function showScreen(id) {
   document.querySelectorAll(".screen").forEach((el) => el.classList.toggle("active", el.id === id));
 }
 
-export function moveEmoji(move) {
-  return MOVE_EMOJI[move] ?? "🖐️";
+/** Photo path for a gesture; a falsy/unrecognized move falls back to the neutral pose. */
+export function handImageSrc(move) {
+  return HAND_IMAGES[move] ?? NEUTRAL_HAND_IMAGE;
 }
 
 export function updateProbBars(bars, ema) {
@@ -14,8 +24,16 @@ export function updateProbBars(bars, ema) {
   bars.scissors.style.width = `${Math.round(ema.scissors * 100)}%`;
 }
 
-export function setMachineHand(el, emoji, { reveal = false } = {}) {
-  el.textContent = emoji;
+/** Sets a duel-panel's hand photo (creating its <img> the first time). */
+export function setHandImage(el, move, { reveal = false } = {}) {
+  let img = el.querySelector("img");
+  if (!img) {
+    img = document.createElement("img");
+    img.className = "hand-photo";
+    img.alt = "";
+    el.appendChild(img);
+  }
+  img.src = handImageSrc(move);
   if (reveal) {
     el.classList.remove("reveal");
     // restart the CSS animation
