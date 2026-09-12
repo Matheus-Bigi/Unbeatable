@@ -148,10 +148,32 @@ html, body {
   width: 100%;
   max-width: 420px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   font-weight: 700;
   color: var(--muted);
 }
+
+.btn-exit {
+  appearance: none;
+  border: 1px solid #2a3040;
+  background: var(--bg-alt);
+  color: var(--muted);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stuck-help {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.stuck-help p { color: var(--muted); margin: 0; }
 
 .play-camera { max-width: 280px; aspect-ratio: 4/5; }
 

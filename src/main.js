@@ -1,10 +1,10 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js";
-import { HandTracker } from "./handTracker.js";
-import { GameEngine, RoundState } from "./gameEngine.js";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js";
-import { MACHINE_LINES, pickLine } from "./machineAI.js";
-import * as storage from "./storage.js";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, setRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=2";
+import { HandTracker } from "./handTracker.js?v=2";
+import { GameEngine, RoundState } from "./gameEngine.js?v=2";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=2";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=2";
+import * as storage from "./storage.js?v=2";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, setRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=2";
 
 const el = (id) => document.getElementById(id);
 
@@ -27,6 +27,8 @@ const machineHandEl = el("machine-hand");
 const playerHandEl = el("player-hand");
 const roundBannerEl = el("round-banner");
 const nextRoundBtn = el("btn-next-round");
+const stuckHelpEl = el("stuck-help");
+const stuckRetryBtn = el("btn-stuck-retry");
 const playAgainBtn = el("btn-play-again");
 const matchTitle = el("match-title");
 const matchScore = el("match-score");
@@ -51,6 +53,27 @@ let handDetectedRecently = 0;
 let gameEngine = null;
 let pendingMatchResult = null;
 let roundsPlayedInMatch = 0;
+let stuckWatchdog = null;
+
+// A round should always resolve within ~5.2s (READY + 3-2-1 + delivery
+// window). If it hasn't by well past that, something went wrong on this
+// device -- surface it instead of leaving the player staring at a frozen
+// screen with no way out.
+const STUCK_TIMEOUT_MS = 9000;
+
+function armStuckWatchdog() {
+  clearTimeout(stuckWatchdog);
+  stuckWatchdog = setTimeout(() => stuckHelpEl.classList.remove("hidden"), STUCK_TIMEOUT_MS);
+}
+
+function disarmStuckWatchdog() {
+  clearTimeout(stuckWatchdog);
+}
+
+stuckRetryBtn.addEventListener("click", () => {
+  stuckHelpEl.classList.add("hidden");
+  gameEngine.startRound();
+});
 
 document.querySelectorAll("[data-back]").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -58,6 +81,7 @@ document.querySelectorAll("[data-back]").forEach((btn) => {
     if (target === "screen-home") {
       gameEngine?.cancel();
       stopCameraCheckLoop();
+      disarmStuckWatchdog();
     }
     showScreen(target);
   });
@@ -202,6 +226,8 @@ async function enterPlay() {
         countdownEl.textContent = "";
         updateProbBars(bars, { rock: 1 / 3, paper: 1 / 3, scissors: 1 / 3 });
         nextRoundBtn.classList.add("hidden");
+        stuckHelpEl.classList.add("hidden");
+        armStuckWatchdog();
       },
       onCountdown(label) {
         countdownEl.textContent = label;
@@ -217,6 +243,7 @@ async function enterPlay() {
         setMachineHand(machineHandEl, moveEmoji(move), { reveal: true });
       },
       onRoundResult({ outcome, playerMove, machineMove, reactionMs, lateChange, score, matchOver }) {
+        disarmStuckWatchdog();
         playerHandEl.textContent = playerMove ? moveEmoji(playerMove) : "❓";
         hudScore.textContent = `${score.player} — ${score.machine}`;
         storage.recordRound(playerName, { outcome, reactionMs });

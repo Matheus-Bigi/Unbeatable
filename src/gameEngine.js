@@ -1,11 +1,12 @@
-import { classifyFrame } from "./gestureClassifier.js";
-import { MotionAnalyzer } from "./motionAnalyzer.js";
-import { PredictionEngine } from "./predictionEngine.js";
-import { CommitmentEngine } from "./commitmentEngine.js";
-import { chooseMachineMove, resolveRound } from "./machineAI.js";
+import { classifyFrame } from "./gestureClassifier.js?v=2";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=2";
+import { PredictionEngine } from "./predictionEngine.js?v=2";
+import { CommitmentEngine } from "./commitmentEngine.js?v=2";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=2";
 
 export const RoundState = {
   READY: "READY",
+  PREP: "PREP",
   COUNTDOWN_3: "COUNTDOWN_3",
   COUNTDOWN_2: "COUNTDOWN_2",
   COUNTDOWN_1: "COUNTDOWN_1",
@@ -15,6 +16,10 @@ export const RoundState = {
 };
 
 const COUNTDOWN_STEP_MS = 900;
+// A beat of "READY" before "3-2-1-GO" so the player has a moment to get
+// into position after the screen changes, rather than the countdown
+// starting the instant the round does.
+const PREP_MS = 1200;
 
 /**
  * Owns one Best-of-3 match: the countdown, the continuous per-frame
@@ -61,18 +66,28 @@ export class GameEngine {
     this.recentLabels = [];
     this.callbacks.onRoundReset?.();
 
-    this.countdownStartMs = performance.now();
+    const now = performance.now();
+    // countdownStartMs anchors "3" itself (not the READY beat before it) --
+    // that's the moment motion analysis is allowed to start counting toward
+    // a commit, since the player is presumably still settling into place
+    // during READY.
+    this.countdownStartMs = now + PREP_MS;
     this.goMs = this.countdownStartMs + 3 * COUNTDOWN_STEP_MS;
     this.deliveryDeadline = this.goMs + this.config.deliveryWindowMs;
 
-    const seq = [RoundState.COUNTDOWN_3, RoundState.COUNTDOWN_2, RoundState.COUNTDOWN_1, RoundState.GO];
-    const labels = { [RoundState.COUNTDOWN_3]: "3", [RoundState.COUNTDOWN_2]: "2", [RoundState.COUNTDOWN_1]: "1", [RoundState.GO]: "GO" };
-    seq.forEach((state, i) => {
+    const seq = [
+      [RoundState.PREP, "READY", 0],
+      [RoundState.COUNTDOWN_3, "3", PREP_MS],
+      [RoundState.COUNTDOWN_2, "2", PREP_MS + COUNTDOWN_STEP_MS],
+      [RoundState.COUNTDOWN_1, "1", PREP_MS + 2 * COUNTDOWN_STEP_MS],
+      [RoundState.GO, "GO", PREP_MS + 3 * COUNTDOWN_STEP_MS],
+    ];
+    seq.forEach(([state, label, delay]) => {
       const timer = setTimeout(() => {
         this.setState(state);
-        this.callbacks.onCountdown?.(labels[state]);
+        this.callbacks.onCountdown?.(label);
         if (state === RoundState.GO) this.setState(RoundState.DELIVERY);
-      }, i * COUNTDOWN_STEP_MS);
+      }, delay);
       this._timers.push(timer);
     });
 

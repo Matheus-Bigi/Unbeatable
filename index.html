@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>UNBEATABLE</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2" />
 </head>
 <body>
   <div id="app">
@@ -47,6 +47,7 @@
     <!-- PLAY -->
     <section id="screen-play" class="screen">
       <div class="hud">
+        <button class="btn-exit" data-back="screen-home" aria-label="Quit to home">✕</button>
         <div class="score" id="hud-score">0 — 0</div>
         <div class="round" id="hud-round">Round 1</div>
       </div>
@@ -67,6 +68,11 @@
       </div>
       <div id="round-banner" class="round-banner"></div>
       <button id="btn-next-round" class="btn btn-primary hidden">NEXT ROUND</button>
+      <div id="stuck-help" class="stuck-help hidden">
+        <p>That round didn't resolve. Sorry about that.</p>
+        <button id="btn-stuck-retry" class="btn btn-primary">TRY AGAIN</button>
+        <button class="btn btn-ghost btn-back" data-back="screen-home">HOME</button>
+      </div>
     </section>
 
     <!-- MATCH RESULT -->
@@ -83,6 +89,6 @@
     </section>
 
   </div>
-  <script type="module" src="src/main.js"></script>
+  <script type="module" src="src/main.js?v=2"></script>
 </body>
 </html>
