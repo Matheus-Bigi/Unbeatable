@@ -1,12 +1,12 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=11";
-import { HandTracker } from "./handTracker.js?v=11";
-import { classifyFrame } from "./gestureClassifier.js?v=11";
-import { GameEngine, RoundState } from "./gameEngine.js?v=11";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=11";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=11";
-import * as storage from "./storage.js?v=11";
-import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=11";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=11";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=12";
+import { HandTracker } from "./handTracker.js?v=12";
+import { classifyFrame } from "./gestureClassifier.js?v=12";
+import { GameEngine, RoundState } from "./gameEngine.js?v=12";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=12";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=12";
+import * as storage from "./storage.js?v=12";
+import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=12";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=12";
 
 const el = (id) => document.getElementById(id);
 

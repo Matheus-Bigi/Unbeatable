@@ -19,6 +19,19 @@ export const DEFAULT_DIFFICULTY = {
   // -- late enough that the engine is never reacting to a resting pose from
   // seconds earlier, early enough to catch the real throw as it happens.
   armBeforeGoMs: 720,
+  // The hand must be relatively still (this many units, 0-1 from
+  // MotionAnalyzer.stability() -- 1 is perfectly still) before a commit is
+  // allowed to start accumulating. Without this, the arm-window gate above
+  // only controls WHEN a commit can start, not whether the gesture on
+  // screen right then is actually finished -- a still-forming hand shape
+  // can spike the classifier's confidence just as easily as a settled one,
+  // so the engine was locking onto whatever was on screen the instant the
+  // window opened almost every round (constant near-instant commits, and
+  // predictions no better than a coin flip since it wasn't reading the
+  // real final gesture). This is the second half of the "unbeatable"
+  // mechanic alongside armBeforeGoMs: arm the window early enough to catch
+  // a fast player, but don't actually commit until the hand stops moving.
+  commitStabilityGate: 0.5,
   // Player has this long after GO to deliver a final, readable gesture.
   // Combined with armBeforeGoMs this defines a ~2s window straddling GO
   // during which the Machine is allowed to commit.

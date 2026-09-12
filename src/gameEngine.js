@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=11";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=11";
-import { PredictionEngine } from "./predictionEngine.js?v=11";
-import { CommitmentEngine } from "./commitmentEngine.js?v=11";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=11";
+import { classifyFrame } from "./gestureClassifier.js?v=12";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=12";
+import { PredictionEngine } from "./predictionEngine.js?v=12";
+import { CommitmentEngine } from "./commitmentEngine.js?v=12";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=12";
 
 export const RoundState = {
   READY: "READY",
@@ -145,10 +145,11 @@ export class GameEngine {
       this.recentLabels.push(frame.label);
       if (this.recentLabels.length > 6) this.recentLabels.shift();
 
-      const ema = this.prediction.update(frame.probs, this.motion.stability());
+      const stability = this.motion.stability();
+      const ema = this.prediction.update(frame.probs, stability);
       this.callbacks.onProb?.(ema);
 
-      const committed = this.commitment.update(ema, nowMs, this.goMs, this.oneMs);
+      const committed = this.commitment.update(ema, nowMs, this.goMs, this.oneMs, stability);
       if (committed && !this.machineMove) this._lockMachineMove(committed);
     }
 

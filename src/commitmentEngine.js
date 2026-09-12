@@ -29,8 +29,15 @@ export class CommitmentEngine {
    *   is a normal read, not an anomaly. Only a commit before "1" (which the
    *   armBeforeGoMs gate below should already prevent under normal tuning)
    *   is genuinely a too-early false read worth flagging.
+   * @param stability 0-1 from MotionAnalyzer -- 1 means the hand is
+   *   essentially still, 0 means it's still moving fast. Required so a
+   *   commit can only lock onto a hand shape that has actually settled,
+   *   not one still mid-transition into its final shape (which just
+   *   reintroduces "reacting to noise" -- the arm-window gate alone
+   *   controls WHEN a commit is allowed to start, not whether what's on
+   *   screen right then is the real, finished gesture).
    */
-  update(ema, nowMs, goMs, oneMs) {
+  update(ema, nowMs, goMs, oneMs, stability) {
     const [topLabel, topProb] = Object.entries(ema).sort((a, b) => b[1] - a[1])[0];
 
     if (this.committed) {
@@ -47,8 +54,9 @@ export class CommitmentEngine {
 
     const threshold = this.config.commitThresholdByClass?.[topLabel] ?? this.config.commitThreshold;
     const framesNeeded = this.config.commitFramesByClass?.[topLabel] ?? this.config.commitFrames;
+    const settled = stability >= this.config.commitStabilityGate;
 
-    if (topProb >= threshold) {
+    if (topProb >= threshold && settled) {
       this.streak[topLabel] = (this.streak[topLabel] || 0) + 1;
     } else {
       this.streak = { rock: 0, paper: 0, scissors: 0 };

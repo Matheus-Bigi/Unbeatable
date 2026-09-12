@@ -3,11 +3,11 @@
 // emoji glyphs everywhere a hand gesture is shown -- the Machine's reveal,
 // the player's reveal, and the gesture-calibration prompt.
 const HAND_IMAGES = {
-  rock: "assets/hands/rock.webp?v=11",
-  paper: "assets/hands/paper.webp?v=11",
-  scissors: "assets/hands/scissors.webp?v=11",
+  rock: "assets/hands/rock.webp?v=12",
+  paper: "assets/hands/paper.webp?v=12",
+  scissors: "assets/hands/scissors.webp?v=12",
 };
-const NEUTRAL_HAND_IMAGE = "assets/hands/neutral.webp?v=11";
+const NEUTRAL_HAND_IMAGE = "assets/hands/neutral.webp?v=12";
 
 export function showScreen(id) {
   document.querySelectorAll(".screen").forEach((el) => el.classList.toggle("active", el.id === id));
