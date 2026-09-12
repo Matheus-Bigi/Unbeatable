@@ -77,3 +77,16 @@ export function listAllPlayers() {
   }
   return out;
 }
+
+export function clearAllPlayers() {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(KEY_PREFIX)) keys.push(key);
+    }
+    keys.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // localStorage unavailable -- nothing to clear.
+  }
+}

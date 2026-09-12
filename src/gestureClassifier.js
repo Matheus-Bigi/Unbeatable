@@ -1,4 +1,4 @@
-import { sub, angleBetween, clamp01 } from "./landmarkUtils.js?v=12";
+import { sub, angleBetween, clamp01 } from "./landmarkUtils.js?v=13";
 
 // [mcp, pip, tip] indices per MediaPipe hand landmark layout.
 const FINGERS = {

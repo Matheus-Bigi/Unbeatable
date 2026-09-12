@@ -1,18 +1,19 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=12";
-import { HandTracker } from "./handTracker.js?v=12";
-import { classifyFrame } from "./gestureClassifier.js?v=12";
-import { GameEngine, RoundState } from "./gameEngine.js?v=12";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=12";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=12";
-import * as storage from "./storage.js?v=12";
-import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=12";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=12";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=13";
+import { HandTracker } from "./handTracker.js?v=13";
+import { classifyFrame } from "./gestureClassifier.js?v=13";
+import { GameEngine, RoundState } from "./gameEngine.js?v=13";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=13";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=13";
+import * as storage from "./storage.js?v=13";
+import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=13";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=13";
 
 const el = (id) => document.getElementById(id);
 
 const homeBtn = el("btn-quick-play");
 const passPlayBtn = el("btn-pass-play");
 const leaderboardBtn = el("btn-leaderboard");
+const leaderboardClearBtn = el("btn-leaderboard-clear");
 const nameInput = el("input-name");
 const nameContinueBtn = el("btn-name-continue");
 const passplayStartBtn = el("btn-passplay-start");
@@ -132,6 +133,12 @@ passPlayBtn.addEventListener("click", () => {
 leaderboardBtn.addEventListener("click", () => {
   renderLeaderboard();
   showScreen("screen-leaderboard");
+});
+
+leaderboardClearBtn.addEventListener("click", () => {
+  if (!confirm("Clear the leaderboard? This removes every player's stats from this device and can't be undone.")) return;
+  storage.clearAllPlayers();
+  renderLeaderboard();
 });
 
 nameContinueBtn.addEventListener("click", async () => {

@@ -130,6 +130,14 @@ h2 {
   text-transform: uppercase;
   margin-top: 8px;
 }
+.credit {
+  color: var(--stone);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+  margin-top: 2px;
+}
 
 .btn {
   appearance: none;
@@ -149,6 +157,7 @@ h2 {
 .btn-primary { background: var(--signal); color: var(--void); }
 .btn-primary:disabled { opacity: 0.35; }
 .btn-ghost { background: transparent; color: var(--stone); border-color: var(--line); }
+.btn-danger { color: var(--lose); border-color: var(--lose); opacity: 0.85; }
 .btn-back { margin-top: 4px; }
 .hidden { display: none !important; }
 
