@@ -166,6 +166,37 @@ h2 {
   letter-spacing: 0.08em;
 }
 
+.passplay-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+.passplay-inputs .text-input { max-width: none; padding: 12px; font-size: 0.95rem; }
+
+.results-table {
+  width: 100%;
+  max-width: 380px;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+.results-table th, .results-table td {
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.results-table th {
+  color: var(--stone);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.results-table td:first-child, .results-table th:first-child { color: var(--stone); width: 1.6em; }
+.results-table tbody tr:first-child td { color: var(--signal); font-weight: 600; }
+
 .camera-wrap {
   position: relative;
   width: 100%;
@@ -277,20 +308,82 @@ h2 {
   cursor: pointer;
 }
 
-.play-camera { max-width: 280px; aspect-ratio: 4/5; }
-
-.machine-row {
+/* Two equal-size windows facing off -- the Machine gets the same visual
+   weight and framing as the player's own camera feed, like a video call,
+   so it reads as an opponent rather than a HUD decoration next to your
+   own picture. */
+.duel {
   width: 100%;
   max-width: 420px;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  margin: 4px 0;
+  gap: 8px;
 }
 
-.machine-hand, .player-hand {
-  font-size: 4.2rem;
+.duel-panel {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  aspect-ratio: 3/4;
+}
+
+.duel-vs {
+  flex-shrink: 0;
+  color: var(--stone);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.duel-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: rgba(20, 17, 14, 0.75);
+  border: 1px solid var(--line);
+  color: var(--stone);
+}
+
+/* The Machine's window has no camera feed to show, so its panel gets a
+   slow "breathing" glow instead -- a signal that it's live and watching,
+   not a dead placeholder. */
+.machine-panel { background: var(--panel); }
+.machine-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 159, 28, 0.08), transparent 70%);
+  animation: machine-breathe 3s ease-in-out infinite;
+}
+@keyframes machine-breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.duel-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.6rem;
+  line-height: 1;
   transition: transform 0.12s ease-out;
+}
+
+/* A soft dark halo behind whichever emoji is showing -- readable over the
+   player's own moving video feed, present for the Machine's reticle too. */
+.duel-reveal:not(:empty) {
+  background: radial-gradient(circle, rgba(20, 17, 14, 0.8) 50%, transparent 72%);
 }
 
 /* Idle state is a plain reticle glyph (muted, dormant) rather than a
@@ -298,7 +391,7 @@ h2 {
    emoji at reveal is part of the "it just locked on" moment. */
 .machine-hand { color: var(--stone); }
 
-.machine-hand.reveal { animation: reveal-pop 0.22s ease-out; }
+.duel-reveal.reveal { animation: reveal-pop 0.22s ease-out; }
 @keyframes reveal-pop {
   0% { transform: scale(0.4) rotate(-10deg); }
   60% { transform: scale(1.18) rotate(4deg); }
@@ -307,18 +400,10 @@ h2 {
 
 /* Plays while the Machine has already decided internally but before the
    reveal -- signals "it's already reacting" without giving away the move. */
-.machine-hand.thinking { animation: think-pulse 0.5s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(255, 159, 28, 0.55)); }
+.duel-reveal.thinking { animation: think-pulse 0.5s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(255, 159, 28, 0.55)); }
 @keyframes think-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
-}
-
-.vs {
-  color: var(--stone);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
 }
 
 .countdown {
@@ -409,7 +494,7 @@ h2 {
 }
 
 @media (max-width: 380px) {
-  .machine-hand, .player-hand { font-size: 3.2rem; }
+  .duel-reveal { font-size: 2.6rem; }
 }
 
 /* Landscape/panoramic: the portrait-sized stack (tall camera preview +
@@ -421,8 +506,9 @@ h2 {
   .screen { gap: 8px; padding-top: max(10px, env(safe-area-inset-top)); }
   .title { font-size: 2rem; }
   .camera-wrap { max-width: 260px; }
-  .play-camera { width: auto; height: 30vh; max-width: 42vw; }
-  .machine-hand, .player-hand { font-size: 2.6rem; }
+  .duel { max-width: 480px; }
+  .duel-panel { aspect-ratio: 1/1; }
+  .duel-reveal { font-size: 2.4rem; }
   .countdown { font-size: 2rem; }
   .match-score { font-size: 1.8rem; }
 }

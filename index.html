@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
   <div id="app">
@@ -21,6 +21,8 @@
       <p class="subtitle">Rock. Paper. Scissors.</p>
       <p class="tagline">It sees your move before you finish it.</p>
       <button id="btn-quick-play" class="btn btn-primary">QUICK PLAY</button>
+      <button id="btn-pass-play" class="btn btn-ghost">PASS &amp; PLAY</button>
+      <button id="btn-leaderboard" class="btn btn-ghost">LEADERBOARD</button>
       <p class="footnote">vs MACHINE &middot; Best of 3</p>
     </section>
 
@@ -29,6 +31,20 @@
       <h2>What's your name?</h2>
       <input id="input-name" class="text-input" type="text" maxlength="16" placeholder="YOUR NAME" autocapitalize="characters" />
       <button id="btn-name-continue" class="btn btn-primary">CONTINUE</button>
+      <button class="btn btn-ghost btn-back" data-back="screen-home">BACK</button>
+    </section>
+
+    <!-- PASS & PLAY SETUP -->
+    <section id="screen-passplay-setup" class="screen">
+      <h2>Pass &amp; Play</h2>
+      <p class="subtitle">Up to 4 players, one device.</p>
+      <div class="passplay-inputs">
+        <input class="text-input passplay-input" data-slot="0" maxlength="16" placeholder="PLAYER 1" autocapitalize="characters" />
+        <input class="text-input passplay-input" data-slot="1" maxlength="16" placeholder="PLAYER 2 (optional)" autocapitalize="characters" />
+        <input class="text-input passplay-input" data-slot="2" maxlength="16" placeholder="PLAYER 3 (optional)" autocapitalize="characters" />
+        <input class="text-input passplay-input" data-slot="3" maxlength="16" placeholder="PLAYER 4 (optional)" autocapitalize="characters" />
+      </div>
+      <button id="btn-passplay-start" class="btn btn-primary">CONTINUE</button>
       <button class="btn btn-ghost btn-back" data-back="screen-home">BACK</button>
     </section>
 
@@ -47,7 +63,14 @@
         <li id="check-light">Lighting</li>
       </ul>
       <button id="btn-camera-ready" class="btn btn-primary" disabled>READY</button>
-      <button class="btn btn-ghost btn-back" data-back="screen-name">BACK</button>
+      <button id="btn-camera-back" class="btn btn-ghost btn-back" data-back="screen-name">BACK</button>
+    </section>
+
+    <!-- PASS & PLAY: PASS THE DEVICE -->
+    <section id="screen-passplay-pass" class="screen">
+      <p class="subtitle">Pass the device to</p>
+      <h2 id="passplay-pass-name">PLAYER</h2>
+      <button id="btn-passplay-ready" class="btn btn-primary">I'M READY</button>
     </section>
 
     <!-- PLAY -->
@@ -57,14 +80,18 @@
         <div class="score" id="hud-score">0 — 0</div>
         <div class="round" id="hud-round">Round 1</div>
       </div>
-      <div class="camera-wrap play-camera">
-        <video id="video-play" playsinline muted></video>
-        <canvas id="overlay-play"></canvas>
-      </div>
-      <div class="machine-row">
-        <div class="machine-hand" id="machine-hand">◎</div>
-        <div class="vs">VS</div>
-        <div class="player-hand" id="player-hand">🖐️</div>
+      <div class="duel">
+        <div class="camera-wrap duel-panel">
+          <video id="video-play" playsinline muted></video>
+          <canvas id="overlay-play"></canvas>
+          <span class="duel-label">YOU</span>
+          <div class="duel-reveal player-hand" id="player-hand"></div>
+        </div>
+        <div class="duel-vs">VS</div>
+        <div class="camera-wrap duel-panel machine-panel">
+          <span class="duel-label">MACHINE</span>
+          <div class="duel-reveal machine-hand" id="machine-hand">◎</div>
+        </div>
       </div>
       <div id="countdown" class="countdown"></div>
       <button id="btn-start-match" class="btn btn-primary hidden">I'M READY — START</button>
@@ -96,10 +123,37 @@
         <div><span id="stat-streak">-</span><label>Best Streak</label></div>
       </div>
       <button id="btn-play-again" class="btn btn-primary">PLAY AGAIN</button>
+      <button id="btn-passplay-next" class="btn btn-primary hidden">PASS TO NEXT PLAYER</button>
       <button class="btn btn-ghost btn-back" data-back="screen-home">HOME</button>
     </section>
 
+    <!-- PASS & PLAY: SESSION RESULTS -->
+    <section id="screen-passplay-results" class="screen">
+      <h2>Results</h2>
+      <table class="results-table">
+        <thead>
+          <tr><th>#</th><th>Player</th><th>Wins</th><th>Fastest</th></tr>
+        </thead>
+        <tbody id="passplay-results-body"></tbody>
+      </table>
+      <button id="btn-passplay-again" class="btn btn-primary">PLAY AGAIN</button>
+      <button class="btn btn-ghost btn-back" data-back="screen-home">HOME</button>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="screen-leaderboard" class="screen">
+      <h2>Leaderboard</h2>
+      <table class="results-table">
+        <thead>
+          <tr><th>#</th><th>Player</th><th>Wins</th><th>Fastest</th><th>Streak</th></tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+      <p id="leaderboard-empty" class="subtitle hidden">No games played yet.</p>
+      <button class="btn btn-ghost btn-back" data-back="screen-home">BACK</button>
+    </section>
+
   </div>
-  <script type="module" src="src/main.js?v=4"></script>
+  <script type="module" src="src/main.js?v=5"></script>
 </body>
 </html>

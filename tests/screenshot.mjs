@@ -4,7 +4,7 @@ async function main() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 420, height: 860 } });
   await page.setViewportSize({ width: 420, height: 860 });
-  await page.goto("http://localhost:8766/index.html");
+  await page.goto("http://localhost:8767/index.html");
   await page.waitForTimeout(300);
   await page.screenshot({ path: "/tmp/shot-home.png" });
 

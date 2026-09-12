@@ -62,3 +62,18 @@ export function recordMatch(name) {
 export function averageReactionMs(stats) {
   return stats.reactionCount ? stats.reactionSumMs / stats.reactionCount : null;
 }
+
+export function listAllPlayers() {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(KEY_PREFIX)) {
+        out.push({ name: key.slice(KEY_PREFIX.length), stats: loadStats(key.slice(KEY_PREFIX.length)) });
+      }
+    }
+  } catch {
+    // localStorage unavailable -- leaderboard is just empty.
+  }
+  return out;
+}

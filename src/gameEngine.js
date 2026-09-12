@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=4";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=4";
-import { PredictionEngine } from "./predictionEngine.js?v=4";
-import { CommitmentEngine } from "./commitmentEngine.js?v=4";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=4";
+import { classifyFrame } from "./gestureClassifier.js?v=5";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=5";
+import { PredictionEngine } from "./predictionEngine.js?v=5";
+import { CommitmentEngine } from "./commitmentEngine.js?v=5";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=5";
 
 export const RoundState = {
   READY: "READY",

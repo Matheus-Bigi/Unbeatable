@@ -1,17 +1,29 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=4";
-import { HandTracker } from "./handTracker.js?v=4";
-import { GameEngine, RoundState } from "./gameEngine.js?v=4";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=4";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=4";
-import * as storage from "./storage.js?v=4";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=4";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=4";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=5";
+import { HandTracker } from "./handTracker.js?v=5";
+import { GameEngine, RoundState } from "./gameEngine.js?v=5";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=5";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=5";
+import * as storage from "./storage.js?v=5";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=5";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=5";
 
 const el = (id) => document.getElementById(id);
 
 const homeBtn = el("btn-quick-play");
+const passPlayBtn = el("btn-pass-play");
+const leaderboardBtn = el("btn-leaderboard");
 const nameInput = el("input-name");
 const nameContinueBtn = el("btn-name-continue");
+const passplayStartBtn = el("btn-passplay-start");
+const passplayInputs = document.querySelectorAll(".passplay-input");
+const cameraBackBtn = el("btn-camera-back");
+const passplayPassNameEl = el("passplay-pass-name");
+const passplayReadyBtn = el("btn-passplay-ready");
+const passplayNextBtn = el("btn-passplay-next");
+const passplayAgainBtn = el("btn-passplay-again");
+const passplayResultsBody = el("passplay-results-body");
+const leaderboardBody = el("leaderboard-body");
+const leaderboardEmpty = el("leaderboard-empty");
 const cameraVideo = el("video");
 const cameraOverlay = el("overlay");
 const cameraStatus = el("camera-status");
@@ -53,9 +65,10 @@ let playerName = "";
 let checkLoopRunning = false;
 let handDetectedRecently = 0;
 let gameEngine = null;
-let pendingMatchResult = null;
 let roundsPlayedInMatch = 0;
 let stuckWatchdog = null;
+let mode = "quick"; // "quick" | "passplay"
+let passPlay = null; // { players: [{name, matchWins, fastestMs}], currentIndex }
 
 // A round should always resolve within ~5.2s (READY + 3-2-1 + delivery
 // window). If it hasn't by well past that, something went wrong on this
@@ -84,6 +97,8 @@ document.querySelectorAll("[data-back]").forEach((btn) => {
       gameEngine?.cancel();
       stopCameraCheckLoop();
       disarmStuckWatchdog();
+      mode = "quick";
+      passPlay = null;
     }
     showScreen(target);
   });
@@ -91,7 +106,20 @@ document.querySelectorAll("[data-back]").forEach((btn) => {
 
 homeBtn.addEventListener("click", () => {
   primeAudio();
+  mode = "quick";
+  cameraBackBtn.dataset.back = "screen-name";
   showScreen("screen-name");
+});
+
+passPlayBtn.addEventListener("click", () => {
+  primeAudio();
+  mode = "passplay";
+  showScreen("screen-passplay-setup");
+});
+
+leaderboardBtn.addEventListener("click", () => {
+  renderLeaderboard();
+  showScreen("screen-leaderboard");
 });
 
 nameContinueBtn.addEventListener("click", async () => {
@@ -102,9 +130,44 @@ nameContinueBtn.addEventListener("click", async () => {
   await enterCameraCheck();
 });
 
+passplayStartBtn.addEventListener("click", async () => {
+  const names = [...passplayInputs].map((input) => input.value.trim()).filter(Boolean);
+  if (names.length === 0) return;
+  passPlay = {
+    players: names.map((name) => ({ name: name.toUpperCase(), matchWins: 0, fastestMs: null })),
+    currentIndex: 0,
+  };
+  cameraBackBtn.dataset.back = "screen-passplay-setup";
+  showScreen("screen-camera");
+  await enterCameraCheck();
+});
+
 readyBtn.addEventListener("click", () => {
   stopCameraCheckLoop();
-  enterPlay().catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
+  proceedAfterCameraCheck();
+});
+
+passplayReadyBtn.addEventListener("click", () => {
+  playerName = passPlay.players[passPlay.currentIndex].name;
+  enterPlay({ autoStart: true }).catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
+});
+
+passplayNextBtn.addEventListener("click", () => {
+  passPlay.currentIndex++;
+  if (passPlay.currentIndex >= passPlay.players.length) {
+    showPassPlayResults();
+  } else {
+    showPassPlayPassScreen();
+  }
+});
+
+passplayAgainBtn.addEventListener("click", () => {
+  passPlay.players.forEach((p) => {
+    p.matchWins = 0;
+    p.fastestMs = null;
+  });
+  passPlay.currentIndex = 0;
+  showPassPlayPassScreen();
 });
 
 nextRoundBtn.addEventListener("click", () => {
@@ -122,6 +185,68 @@ playAgainBtn.addEventListener("click", () => {
   gameEngine.startMatch();
 });
 
+function proceedAfterCameraCheck() {
+  if (mode === "passplay") {
+    showPassPlayPassScreen();
+  } else {
+    enterPlay().catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
+  }
+}
+
+function showPassPlayPassScreen() {
+  passplayPassNameEl.textContent = passPlay.players[passPlay.currentIndex].name;
+  showScreen("screen-passplay-pass");
+}
+
+function showPassPlayResults() {
+  const sorted = [...passPlay.players].sort(
+    (a, b) => b.matchWins - a.matchWins || (a.fastestMs ?? Infinity) - (b.fastestMs ?? Infinity)
+  );
+  renderRankedTable(passplayResultsBody, sorted.map((p, i) => [
+    String(i + 1),
+    p.name,
+    String(p.matchWins),
+    p.fastestMs !== null ? `${(p.fastestMs / 1000).toFixed(3)}s` : "-",
+  ]));
+  showScreen("screen-passplay-results");
+}
+
+function renderLeaderboard() {
+  const players = storage.listAllPlayers();
+  if (players.length === 0) {
+    leaderboardBody.innerHTML = "";
+    leaderboardEmpty.classList.remove("hidden");
+    return;
+  }
+  leaderboardEmpty.classList.add("hidden");
+  const sorted = players
+    .map(({ name, stats }) => ({ name, wins: stats.roundWins, fastest: stats.fastestMs, streak: stats.bestStreak }))
+    .sort((a, b) => b.wins - a.wins || (a.fastest ?? Infinity) - (b.fastest ?? Infinity));
+  renderRankedTable(leaderboardBody, sorted.map((p, i) => [
+    String(i + 1),
+    p.name,
+    String(p.wins),
+    p.fastest !== null ? `${(p.fastest / 1000).toFixed(3)}s` : "-",
+    String(p.streak),
+  ]));
+}
+
+// Builds table rows from plain-text cell values via textContent (never
+// innerHTML) -- player names are free-typed user input, so they must never
+// be interpreted as markup.
+function renderRankedTable(tbody, rows) {
+  tbody.innerHTML = "";
+  for (const cells of rows) {
+    const row = document.createElement("tr");
+    for (const text of cells) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      row.appendChild(td);
+    }
+    tbody.appendChild(row);
+  }
+}
+
 async function ensureTracker() {
   if (tracker.landmarker) return;
   cameraStatus.textContent = "Loading vision model…";
@@ -132,6 +257,7 @@ async function enterCameraCheck() {
   cameraStatus.textContent = "Requesting camera…";
   readyBtn.disabled = true;
   try {
+    stopCamera(cameraStream);
     cameraStream = await startCamera(cameraVideo);
     await ensureTracker();
     cameraStatus.textContent = "Show your hand in the frame.";
@@ -197,7 +323,7 @@ function startCameraCheckLoop() {
         // has to break their gesture pose to tap READY with their other hand.
         // Manually tapping READY at any time still works too.
         stopCameraCheckLoop();
-        enterPlay().catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
+        proceedAfterCameraCheck();
         return;
       }
     } else {
@@ -225,7 +351,7 @@ async function waitUntilReady(videoEl) {
   });
 }
 
-async function enterPlay() {
+async function enterPlay({ autoStart = false } = {}) {
   playVideo.srcObject = cameraStream;
   await playVideo.play();
   await waitUntilReady(playVideo);
@@ -243,7 +369,7 @@ async function enterPlay() {
         renderRoundBanner(roundBannerEl);
         machineHandEl.classList.remove("thinking");
         setMachineHand(machineHandEl, "◎");
-        playerHandEl.textContent = "🖐️";
+        playerHandEl.textContent = "";
         countdownEl.textContent = "";
         updateProbBars(bars, { rock: 1 / 3, paper: 1 / 3, scissors: 1 / 3 });
         nextRoundBtn.classList.add("hidden");
@@ -271,7 +397,7 @@ async function enterPlay() {
       onRoundResult({ outcome, playerMove, machineMove, reactionMs, lateChange, score, matchOver }) {
         disarmStuckWatchdog();
         resultBeep(outcome);
-        playerHandEl.textContent = playerMove ? moveEmoji(playerMove) : "❓";
+        setMachineHand(playerHandEl, playerMove ? moveEmoji(playerMove) : "❓", { reveal: true });
         hudScore.textContent = `${score.player} — ${score.machine}`;
         storage.recordRound(playerName, { outcome, reactionMs });
         if (!matchOver) nextRoundBtn.classList.remove("hidden");
@@ -295,24 +421,33 @@ async function enterPlay() {
         renderRoundBanner(roundBannerEl, { verdict, line, reactionMs, kind });
       },
       onMatchResult(result) {
-        pendingMatchResult = result;
         storage.recordMatch(playerName);
-        setTimeout(() => showMatchScreen(pendingMatchResult), 1600);
+        if (mode === "passplay") {
+          const p = passPlay.players[passPlay.currentIndex];
+          if (result.winner === "player") p.matchWins++;
+          const fastest = Math.min(...result.reactions);
+          p.fastestMs = p.fastestMs === null ? fastest : Math.min(p.fastestMs, fastest);
+        }
+        setTimeout(() => showMatchScreen(result), 1600);
       },
     },
   });
 
   runPlayOverlayLoop();
 
-  // Give the player as long as they need to get positioned before the very
-  // first round of a match -- everything up to here has been automatic
-  // (camera check -> READY -> straight into play), so don't also auto-start
-  // the countdown; wait for a deliberate tap.
-  startMatchBtn.classList.remove("hidden");
-  startMatchBtn.onclick = () => {
-    startMatchBtn.classList.add("hidden");
+  if (autoStart) {
     gameEngine.startMatch();
-  };
+  } else {
+    // Give the player as long as they need to get positioned before the
+    // very first round of a match -- everything up to here has been
+    // automatic (camera check -> READY -> straight into play), so don't
+    // also auto-start the countdown; wait for a deliberate tap.
+    startMatchBtn.classList.remove("hidden");
+    startMatchBtn.onclick = () => {
+      startMatchBtn.classList.add("hidden");
+      gameEngine.startMatch();
+    };
+  }
 }
 
 function runPlayOverlayLoop() {
@@ -338,6 +473,15 @@ function showMatchScreen(result) {
   statFastest.textContent = fastest !== null ? `${(fastest / 1000).toFixed(3)}s` : "-";
   statAverage.textContent = avg !== null ? `${(avg / 1000).toFixed(3)}s` : "-";
   statStreak.textContent = stats.bestStreak;
+
+  const isPassPlay = mode === "passplay";
+  playAgainBtn.classList.toggle("hidden", isPassPlay);
+  passplayNextBtn.classList.toggle("hidden", !isPassPlay);
+  if (isPassPlay) {
+    const isLast = passPlay.currentIndex >= passPlay.players.length - 1;
+    passplayNextBtn.textContent = isLast ? "SEE RESULTS" : "PASS TO NEXT PLAYER";
+  }
+
   showScreen("screen-match");
 }
 
