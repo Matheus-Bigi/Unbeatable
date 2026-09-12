@@ -24,7 +24,7 @@ Alternative for faster local iteration on a Mac: `npx serve .` and open `https:/
 
 ## What to expect from this MVP
 
-- One difficulty, tuned aggressive (see `src/difficultyConfig.js` — `commitThreshold`, `commitFrames`, `armBeforeGoMs` are the main knobs).
+- One difficulty, tuned aggressive (see `src/difficultyConfig.js` — `commitThreshold`, `commitFrames`, `armBeforeGoMs` are the main knobs). Rock gets its own stricter bar (`commitThresholdByClass`/`commitFramesByClass`) since a relaxed fist is many people's resting hand shape, so it's the class most likely to false-trigger early; paper/scissors require deliberately shaping the fingers so they're trusted at the base threshold. A short `lateGraceMs` extension is granted once if the player's gesture still looks unsettled right at the delivery deadline.
 - A live probability bar for ROCK/PAPER/SCISSORS during play, and a hand-landmark skeleton overlay — both intentionally left visible so you can see *why* the Machine reacted when it did, while we tune it. These can be hidden once the timing feels right.
 - The Machine's win rate comes entirely from real (imperfect) gesture recognition — nothing is rigged, so you should win sometimes.
 - The Machine gets its own equal-size window next to your camera feed (like a video call), so it reads as an opponent rather than a small icon next to your own picture. Its move only appears in that window at the same instant your own gesture is judged — never revealed early, since that would just let you counter what you see. A "thinking" pulse plays beforehand as a non-committal hint.

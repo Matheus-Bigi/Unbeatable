@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=5";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=5";
-import { PredictionEngine } from "./predictionEngine.js?v=5";
-import { CommitmentEngine } from "./commitmentEngine.js?v=5";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=5";
+import { classifyFrame } from "./gestureClassifier.js?v=6";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=6";
+import { PredictionEngine } from "./predictionEngine.js?v=6";
+import { CommitmentEngine } from "./commitmentEngine.js?v=6";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=6";
 
 export const RoundState = {
   READY: "READY",
@@ -73,6 +73,8 @@ export class GameEngine {
     this.countdownStartMs = now + PREP_MS;
     this.goMs = this.countdownStartMs + 3 * COUNTDOWN_STEP_MS;
     this.deliveryDeadline = this.goMs + this.config.deliveryWindowMs;
+    this.effectiveDeadline = this.deliveryDeadline;
+    this.gracedLate = false;
 
     const seq = [
       [RoundState.PREP, "READY", 0],
@@ -142,8 +144,17 @@ export class GameEngine {
       if (committed && !this.machineMove) this._lockMachineMove(committed);
     }
 
-    if (this.state === RoundState.DELIVERY && nowMs >= this.deliveryDeadline) {
-      this._deliver(nowMs);
+    if (this.state === RoundState.DELIVERY && nowMs >= this.effectiveDeadline) {
+      const stillUnsettled = this.recentLabels[this.recentLabels.length - 1] === "uncertain";
+      if (stillUnsettled && !this.gracedLate) {
+        // The player's hand is still visibly mid-transition right at the
+        // deadline -- give them one short extension rather than forcing a
+        // read on a gesture that hasn't settled yet.
+        this.gracedLate = true;
+        this.effectiveDeadline = nowMs + this.config.lateGraceMs;
+      } else {
+        this._deliver(nowMs);
+      }
     }
   }
 
@@ -206,6 +217,8 @@ export class GameEngine {
       playerMove,
       machineMove: this.machineMove,
       reactionMs,
+      beforeGo: committed?.beforeGo ?? false,
+      late: this.gracedLate,
       lateChange: this.commitment.lateChangeDetected,
       score: { ...this.score },
       matchOver,

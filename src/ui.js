@@ -24,12 +24,25 @@ export function setMachineHand(el, emoji, { reveal = false } = {}) {
   }
 }
 
-export function renderRoundBanner(root, { verdict = "", line = "", reactionMs = null, kind = null } = {}) {
+export function renderRoundBanner(root, { verdict = "", line = "", reactionMs = null, kind = null, beforeGo = false, late = false } = {}) {
   root.classList.remove("win", "lose");
   if (kind) root.classList.add(kind);
   root.querySelector(".round-verdict").textContent = verdict;
   root.querySelector(".round-line").textContent = line ? `“${line}”` : "";
-  root.querySelector(".round-reaction").textContent = typeof reactionMs === "number" ? `${(reactionMs / 1000).toFixed(3)}s` : "";
+
+  const reactionEl = root.querySelector(".round-reaction");
+  if (typeof reactionMs !== "number") {
+    reactionEl.textContent = "";
+    return;
+  }
+  const seconds = `${(reactionMs / 1000).toFixed(3)}s`;
+  // Surface *why* a reaction time looks the way it does, rather than just
+  // showing a bare number: a very fast time can be a genuine early read of
+  // the player's throw (predicted before GO), and a slow one can be a
+  // graced late delivery -- both are legitimate, but neither should look
+  // like an ordinary in-window reaction.
+  const tag = beforeGo ? " ⚡ PREDICTED EARLY" : late ? " ⏱ RAN LATE" : "";
+  reactionEl.textContent = seconds + tag;
 }
 
 // 21-point MediaPipe hand skeleton connections, for the debug overlay.

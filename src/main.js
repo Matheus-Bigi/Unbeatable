@@ -1,11 +1,11 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=5";
-import { HandTracker } from "./handTracker.js?v=5";
-import { GameEngine, RoundState } from "./gameEngine.js?v=5";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=5";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=5";
-import * as storage from "./storage.js?v=5";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=5";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=5";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=6";
+import { HandTracker } from "./handTracker.js?v=6";
+import { GameEngine, RoundState } from "./gameEngine.js?v=6";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=6";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=6";
+import * as storage from "./storage.js?v=6";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=6";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=6";
 
 const el = (id) => document.getElementById(id);
 
@@ -394,7 +394,7 @@ async function enterPlay({ autoStart = false } = {}) {
         machineHandEl.classList.remove("thinking");
         setMachineHand(machineHandEl, moveEmoji(move), { reveal: true });
       },
-      onRoundResult({ outcome, playerMove, machineMove, reactionMs, lateChange, score, matchOver }) {
+      onRoundResult({ outcome, playerMove, machineMove, reactionMs, beforeGo, late, lateChange, score, matchOver }) {
         disarmStuckWatchdog();
         resultBeep(outcome);
         setMachineHand(playerHandEl, playerMove ? moveEmoji(playerMove) : "❓", { reveal: true });
@@ -418,7 +418,7 @@ async function enterPlay({ autoStart = false } = {}) {
           kind = null;
           line = pickLine(MACHINE_LINES.draw);
         }
-        renderRoundBanner(roundBannerEl, { verdict, line, reactionMs, kind });
+        renderRoundBanner(roundBannerEl, { verdict, line, reactionMs, kind, beforeGo, late });
       },
       onMatchResult(result) {
         storage.recordMatch(playerName);

@@ -22,6 +22,21 @@ export const DEFAULT_DIFFICULTY = {
   // Combined with armBeforeGoMs this defines a ~2s window straddling GO
   // during which the Machine is allowed to commit.
   deliveryWindowMs: 1300,
+  // ROCK is a closed/relaxed fist -- for a lot of people that's close to
+  // their hand's natural resting shape, so it's the class most likely to
+  // read as a confident classification from doing nothing in particular,
+  // not from a real early throw. PAPER and SCISSORS both require
+  // deliberately shaping the fingers, so they're much less likely to be a
+  // false early trigger. Require a higher bar and longer sustained
+  // evidence specifically for rock so it can't win the "psychic" moment on
+  // a false positive; leave paper/scissors at the base threshold.
+  commitThresholdByClass: { rock: 0.88 },
+  commitFramesByClass: { rock: 7 },
+  // If the player's gesture still looks unsettled (mid-transition) right
+  // at the delivery deadline, grant one short extension instead of forcing
+  // a read on a hand that's still moving -- a bit of tolerance for a
+  // player who's just a beat slow, rather than penalizing them for it.
+  lateGraceMs: 400,
   // Probability threshold + consecutive frames to flag a late gesture change
   // (player switched away from an already-locked prediction).
   lateChangeProb: 0.75,

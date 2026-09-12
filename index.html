@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
   <div id="app">
@@ -81,16 +81,16 @@
         <div class="round" id="hud-round">Round 1</div>
       </div>
       <div class="duel">
+        <div class="camera-wrap duel-panel machine-panel">
+          <span class="duel-label">MACHINE</span>
+          <div class="duel-reveal machine-hand" id="machine-hand">◎</div>
+        </div>
+        <div class="duel-vs">VS</div>
         <div class="camera-wrap duel-panel">
           <video id="video-play" playsinline muted></video>
           <canvas id="overlay-play"></canvas>
           <span class="duel-label">YOU</span>
           <div class="duel-reveal player-hand" id="player-hand"></div>
-        </div>
-        <div class="duel-vs">VS</div>
-        <div class="camera-wrap duel-panel machine-panel">
-          <span class="duel-label">MACHINE</span>
-          <div class="duel-reveal machine-hand" id="machine-hand">◎</div>
         </div>
       </div>
       <div id="countdown" class="countdown"></div>
@@ -154,6 +154,6 @@
     </section>
 
   </div>
-  <script type="module" src="src/main.js?v=5"></script>
+  <script type="module" src="src/main.js?v=6"></script>
 </body>
 </html>

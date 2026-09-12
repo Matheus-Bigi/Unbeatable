@@ -40,17 +40,20 @@ export class CommitmentEngine {
 
     if (nowMs < goMs - this.config.armBeforeGoMs) return null;
 
-    if (topProb >= this.config.commitThreshold) {
+    const threshold = this.config.commitThresholdByClass?.[topLabel] ?? this.config.commitThreshold;
+    const framesNeeded = this.config.commitFramesByClass?.[topLabel] ?? this.config.commitFrames;
+
+    if (topProb >= threshold) {
       this.streak[topLabel] = (this.streak[topLabel] || 0) + 1;
     } else {
       this.streak = { rock: 0, paper: 0, scissors: 0 };
     }
 
-    if (this.streak[topLabel] >= this.config.commitFrames) {
+    if (this.streak[topLabel] >= framesNeeded) {
       // A floor rather than a hard 0 -- an exact "0.000s" every time reads
       // as broken/fake rather than "impossibly fast".
       const reactionMs = Math.max(10, nowMs - goMs);
-      this.committed = { label: topLabel, prob: topProb, t: nowMs, reactionMs };
+      this.committed = { label: topLabel, prob: topProb, t: nowMs, reactionMs, beforeGo: nowMs < goMs };
     }
 
     return this.committed;
