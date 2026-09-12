@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
   <div id="app">
@@ -63,6 +63,17 @@
         <li id="check-light">Lighting</li>
       </ul>
       <button id="btn-camera-ready" class="btn btn-primary" disabled>READY</button>
+      <div id="calibration-panel" class="calibration hidden">
+        <p class="calibration-prompt">
+          Show <span id="calibration-emoji" class="calibration-emoji">✊</span><span id="calibration-label">ROCK</span>
+        </p>
+        <ul class="checklist">
+          <li id="calib-rock">✊ ROCK</li>
+          <li id="calib-paper">✋ PAPER</li>
+          <li id="calib-scissors">✌️ SCISSORS</li>
+        </ul>
+        <button id="btn-calibration-skip" class="btn btn-ghost">SKIP</button>
+      </div>
       <button id="btn-camera-back" class="btn btn-ghost btn-back" data-back="screen-name">BACK</button>
     </section>
 
@@ -154,6 +165,6 @@
     </section>
 
   </div>
-  <script type="module" src="src/main.js?v=6"></script>
+  <script type="module" src="src/main.js?v=7"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import { dist } from "./landmarkUtils.js?v=6";
+import { dist } from "./landmarkUtils.js?v=7";
 
 const VELOCITY_NORM = 0.9; // normalized-units/sec that counts as "fast" hand motion
 

@@ -280,6 +280,33 @@ h2 {
 .checklist li { padding: 6px 12px; border-radius: 4px; background: var(--panel); border: 1px solid var(--line); }
 .checklist li.ok { color: var(--win); border-color: var(--win); }
 
+.calibration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.calibration-prompt {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calibration-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+  animation: calib-pulse 0.9s ease-in-out infinite;
+}
+@keyframes calib-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
 #screen-play { padding-top: max(16px, env(safe-area-inset-top)); gap: 10px; }
 
 .hud {

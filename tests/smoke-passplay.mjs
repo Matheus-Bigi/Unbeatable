@@ -75,6 +75,9 @@ async function main() {
     await page.waitForSelector("#btn-camera-ready:not([disabled])", { timeout: 15000 });
     await page.click("#btn-camera-ready");
 
+    await page.waitForSelector("#calibration-panel:not(.hidden)", { timeout: 5000 });
+    await page.click("#btn-calibration-skip");
+
     await page.waitForSelector("#screen-passplay-pass.active", { timeout: 5000 });
     const firstName = await page.textContent("#passplay-pass-name");
     if (firstName !== "ALEX") throw new Error(`expected pass-screen for ALEX first, got ${firstName}`);

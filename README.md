@@ -28,6 +28,7 @@ Alternative for faster local iteration on a Mac: `npx serve .` and open `https:/
 - A live probability bar for ROCK/PAPER/SCISSORS during play, and a hand-landmark skeleton overlay — both intentionally left visible so you can see *why* the Machine reacted when it did, while we tune it. These can be hidden once the timing feels right.
 - The Machine's win rate comes entirely from real (imperfect) gesture recognition — nothing is rigged, so you should win sometimes.
 - The Machine gets its own equal-size window next to your camera feed (like a video call), so it reads as an opponent rather than a small icon next to your own picture. Its move only appears in that window at the same instant your own gesture is judged — never revealed early, since that would just let you counter what you see. A "thinking" pulse plays beforehand as a non-committal hint.
+- After the camera check (hand/distance/lighting), a short gesture calibration confirms the classifier recognizes your ROCK, PAPER, and SCISSORS at least once before you play — hold each pose until it checks off. This is a confidence check, not a hard gate: SKIP is always available if your gestures keep misreading, so it never locks you out of playing.
 - Not yet built: multiple difficulty levels, richer Machine avatar art, haptics. See the plan this was built from for the intended follow-up phases.
 
 ## Reporting back for tuning

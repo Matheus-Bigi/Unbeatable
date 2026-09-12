@@ -72,6 +72,12 @@ async function main() {
     console.log("[ok] camera check ready (tracker initialized, stream live)");
 
     await page.click("#btn-camera-ready");
+    await page.waitForSelector("#calibration-panel:not(.hidden)", { timeout: 5000 });
+    console.log("[ok] gesture calibration panel shown");
+    // Calibration correctness (holding each pose long enough to register) is
+    // exercised on-device; here just confirm the skip escape hatch works so
+    // someone whose gestures keep misreading isn't locked out of playing.
+    await page.click("#btn-calibration-skip");
     await page.waitForSelector("#screen-play.active", { timeout: 5000 });
     console.log("[ok] entered play screen");
 

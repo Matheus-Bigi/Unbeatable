@@ -1,11 +1,12 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=6";
-import { HandTracker } from "./handTracker.js?v=6";
-import { GameEngine, RoundState } from "./gameEngine.js?v=6";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=6";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=6";
-import * as storage from "./storage.js?v=6";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=6";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=6";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=7";
+import { HandTracker } from "./handTracker.js?v=7";
+import { classifyFrame } from "./gestureClassifier.js?v=7";
+import { GameEngine, RoundState } from "./gameEngine.js?v=7";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=7";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=7";
+import * as storage from "./storage.js?v=7";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=7";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=7";
 
 const el = (id) => document.getElementById(id);
 
@@ -27,10 +28,16 @@ const leaderboardEmpty = el("leaderboard-empty");
 const cameraVideo = el("video");
 const cameraOverlay = el("overlay");
 const cameraStatus = el("camera-status");
+const cameraChecklist = el("camera-checklist");
 const checkHand = el("check-hand");
 const checkDistance = el("check-distance");
 const checkLight = el("check-light");
 const readyBtn = el("btn-camera-ready");
+const calibrationPanel = el("calibration-panel");
+const calibrationEmoji = el("calibration-emoji");
+const calibrationLabel = el("calibration-label");
+const calibSkipBtn = el("btn-calibration-skip");
+const calibItems = { rock: el("calib-rock"), paper: el("calib-paper"), scissors: el("calib-scissors") };
 const playVideo = el("video-play");
 const playOverlay = el("overlay-play");
 const hudScore = el("hud-score");
@@ -64,6 +71,9 @@ let cameraStream = null;
 let playerName = "";
 let checkLoopRunning = false;
 let handDetectedRecently = 0;
+let checkPhase = "environment"; // "environment" | "calibration"
+let calibIndex = 0;
+let calibStreak = 0;
 let gameEngine = null;
 let roundsPlayedInMatch = 0;
 let stuckWatchdog = null;
@@ -143,6 +153,17 @@ passplayStartBtn.addEventListener("click", async () => {
 });
 
 readyBtn.addEventListener("click", () => {
+  if (checkPhase === "environment") {
+    enterCalibrationPhase();
+  } else {
+    stopCameraCheckLoop();
+    proceedAfterCameraCheck();
+  }
+});
+
+calibSkipBtn.addEventListener("click", () => {
+  // Calibration is a confidence check, not a gate -- someone whose gestures
+  // keep misreading here shouldn't be locked out of playing entirely.
   stopCameraCheckLoop();
   proceedAfterCameraCheck();
 });
@@ -269,10 +290,41 @@ async function enterCameraCheck() {
 }
 
 const AUTO_ADVANCE_HOLD_MS = 1200;
+const CALIBRATION_ORDER = ["rock", "paper", "scissors"];
+const CALIBRATION_LABELS = { rock: "ROCK", paper: "PAPER", scissors: "SCISSORS" };
+// Consecutive matching-label frames required before a calibration rep counts
+// -- long enough to rule out a lucky single-frame flicker, short enough that
+// deliberately holding the pose for under a second confirms it.
+const CALIBRATION_HOLD_FRAMES = 10;
+
+function enterCalibrationPhase() {
+  checkPhase = "calibration";
+  calibIndex = 0;
+  calibStreak = 0;
+  Object.values(calibItems).forEach((li) => li.classList.remove("ok"));
+  cameraChecklist.classList.add("hidden");
+  readyBtn.classList.add("hidden");
+  calibrationPanel.classList.remove("hidden");
+  cameraStatus.textContent = "Let's confirm your gestures.";
+  updateCalibrationPrompt();
+}
+
+function updateCalibrationPrompt() {
+  const target = CALIBRATION_ORDER[calibIndex];
+  calibrationEmoji.textContent = moveEmoji(target);
+  calibrationLabel.textContent = CALIBRATION_LABELS[target];
+}
 
 function startCameraCheckLoop() {
   checkLoopRunning = true;
   handDetectedRecently = 0;
+  checkPhase = "environment";
+  calibIndex = 0;
+  calibStreak = 0;
+  cameraChecklist.classList.remove("hidden");
+  readyBtn.classList.remove("hidden");
+  calibrationPanel.classList.add("hidden");
+  Object.values(calibItems).forEach((li) => li.classList.remove("ok"));
   let lastBrightnessCheck = 0;
   let lightOk = false;
   let perfectSinceMs = null;
@@ -286,6 +338,32 @@ function startCameraCheckLoop() {
     if (detection) {
       handDetectedRecently = now;
       drawSkeleton(cameraOverlay, detection.landmarks);
+    } else {
+      drawSkeleton(cameraOverlay, null);
+    }
+
+    if (checkPhase === "calibration") {
+      if (detection) {
+        const { label } = classifyFrame(detection.landmarks);
+        const target = CALIBRATION_ORDER[calibIndex];
+        calibStreak = label === target ? calibStreak + 1 : 0;
+        if (calibStreak >= CALIBRATION_HOLD_FRAMES) {
+          calibItems[target].classList.add("ok");
+          calibIndex++;
+          calibStreak = 0;
+          if (calibIndex >= CALIBRATION_ORDER.length) {
+            stopCameraCheckLoop();
+            proceedAfterCameraCheck();
+            return;
+          }
+          updateCalibrationPrompt();
+        }
+      }
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if (detection) {
       const xs = detection.landmarks.map((p) => p.x);
       const ys = detection.landmarks.map((p) => p.y);
       const bboxW = Math.max(...xs) - Math.min(...xs);
@@ -301,7 +379,6 @@ function startCameraCheckLoop() {
         checkDistance.classList.add("ok");
       }
     } else {
-      drawSkeleton(cameraOverlay, null);
       if (now - handDetectedRecently > 800) checkHand.classList.remove("ok");
     }
 
@@ -317,13 +394,13 @@ function startCameraCheckLoop() {
     if (allGood) {
       perfectSinceMs ??= now;
       const heldMs = now - perfectSinceMs;
-      cameraStatus.textContent = heldMs > 300 ? `Perfect. Starting in ${Math.ceil((AUTO_ADVANCE_HOLD_MS - heldMs) / 1000)}…` : "Perfect.";
+      cameraStatus.textContent = heldMs > 300 ? `Perfect. Continuing in ${Math.ceil((AUTO_ADVANCE_HOLD_MS - heldMs) / 1000)}…` : "Perfect.";
       if (heldMs >= AUTO_ADVANCE_HOLD_MS) {
-        // Auto-continue once conditions hold steady -- so the player never
-        // has to break their gesture pose to tap READY with their other hand.
-        // Manually tapping READY at any time still works too.
-        stopCameraCheckLoop();
-        proceedAfterCameraCheck();
+        // Auto-continue into gesture calibration once conditions hold steady
+        // -- so the player never has to break their pose to tap READY with
+        // their other hand. Manually tapping READY at any time also advances.
+        enterCalibrationPhase();
+        requestAnimationFrame(loop);
         return;
       }
     } else {
