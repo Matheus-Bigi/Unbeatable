@@ -1,12 +1,12 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=9";
-import { HandTracker } from "./handTracker.js?v=9";
-import { classifyFrame } from "./gestureClassifier.js?v=9";
-import { GameEngine, RoundState } from "./gameEngine.js?v=9";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=9";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=9";
-import * as storage from "./storage.js?v=9";
-import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=9";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=9";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=10";
+import { HandTracker } from "./handTracker.js?v=10";
+import { classifyFrame } from "./gestureClassifier.js?v=10";
+import { GameEngine, RoundState } from "./gameEngine.js?v=10";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=10";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=10";
+import * as storage from "./storage.js?v=10";
+import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=10";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=10";
 
 const el = (id) => document.getElementById(id);
 
@@ -45,6 +45,7 @@ const hudRound = el("hud-round");
 const countdownEl = el("countdown");
 const machineHandEl = el("machine-hand");
 const playerHandEl = el("player-hand");
+const playerDuelLabel = el("player-duel-label");
 const roundBannerEl = el("round-banner");
 const nextRoundBtn = el("btn-next-round");
 const startMatchBtn = el("btn-start-match");
@@ -80,7 +81,7 @@ let stuckWatchdog = null;
 let mode = "quick"; // "quick" | "passplay"
 let passPlay = null; // { players: [{name, matchWins, fastestMs}], currentIndex }
 
-// A round should always resolve within ~5.2s (READY + 3-2-1 + delivery
+// A round should always resolve within ~4.4s (READY + 3-2-1 + delivery
 // window). If it hasn't by well past that, something went wrong on this
 // device -- surface it instead of leaving the player staring at a frozen
 // screen with no way out.
@@ -433,6 +434,7 @@ async function enterPlay({ autoStart = false } = {}) {
   await playVideo.play();
   await waitUntilReady(playVideo);
   showScreen("screen-play");
+  playerDuelLabel.textContent = playerName;
   roundsPlayedInMatch = 0;
   hudRound.textContent = "Round 1";
   hudScore.textContent = "0 — 0";

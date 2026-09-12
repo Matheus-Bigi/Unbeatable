@@ -370,6 +370,7 @@ h2 {
   position: absolute;
   top: 8px;
   left: 8px;
+  max-width: calc(100% - 16px);
   z-index: 2;
   font-family: var(--font-mono);
   font-size: 0.6rem;
@@ -379,6 +380,9 @@ h2 {
   background: rgba(20, 17, 14, 0.75);
   border: 1px solid var(--line);
   color: var(--stone);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The Machine's window has no camera feed to show, so its panel gets a
@@ -416,6 +420,14 @@ h2 {
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+}
+
+/* Both panels use the same source photos (wrist entering from the left,
+   fist pointing right), so left unmodified they'd both face the same way.
+   Mirroring the Machine's side makes the two hands face each other across
+   the VS divider, like two opponents squared up across a table. */
+.machine-panel .hand-photo {
+  transform: scaleX(-1);
 }
 
 /* A soft dark halo behind whichever photo is showing -- readable over the

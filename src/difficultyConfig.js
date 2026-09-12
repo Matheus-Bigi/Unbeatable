@@ -18,7 +18,7 @@ export const DEFAULT_DIFFICULTY = {
   // window opens exactly there (matches COUNTDOWN_STEP_MS in gameEngine.js)
   // -- late enough that the engine is never reacting to a resting pose from
   // seconds earlier, early enough to catch the real throw as it happens.
-  armBeforeGoMs: 900,
+  armBeforeGoMs: 720,
   // Player has this long after GO to deliver a final, readable gesture.
   // Combined with armBeforeGoMs this defines a ~2s window straddling GO
   // during which the Machine is allowed to commit.

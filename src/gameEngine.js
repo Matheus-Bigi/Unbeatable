@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=9";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=9";
-import { PredictionEngine } from "./predictionEngine.js?v=9";
-import { CommitmentEngine } from "./commitmentEngine.js?v=9";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=9";
+import { classifyFrame } from "./gestureClassifier.js?v=10";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=10";
+import { PredictionEngine } from "./predictionEngine.js?v=10";
+import { CommitmentEngine } from "./commitmentEngine.js?v=10";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=10";
 
 export const RoundState = {
   READY: "READY",
@@ -15,11 +15,15 @@ export const RoundState = {
   RESULT: "RESULT",
 };
 
-const COUNTDOWN_STEP_MS = 900;
+// ~20% faster than the original 900/1200ms -- the slower cadence read as
+// sluggish rather than "dynamic and impressive". If this changes, keep
+// difficultyConfig.js's armBeforeGoMs in sync (it's meant to match
+// COUNTDOWN_STEP_MS exactly -- the commit window opens right at "1").
+const COUNTDOWN_STEP_MS = 720;
 // A beat of "READY" before "3-2-1-GO" so the player has a moment to get
 // into position after the screen changes, rather than the countdown
 // starting the instant the round does.
-const PREP_MS = 1200;
+const PREP_MS = 960;
 
 /**
  * Owns one Best-of-3 match: the countdown, the continuous per-frame
