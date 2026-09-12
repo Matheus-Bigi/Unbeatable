@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>UNBEATABLE</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <h1 class="title">UNBEATABLE</h1>
+      <p class="subtitle">Rock. Paper. Scissors.</p>
+      <p class="tagline">It sees your move before you finish it.</p>
+      <button id="btn-quick-play" class="btn btn-primary">QUICK PLAY</button>
+      <p class="footnote">vs MACHINE &middot; Best of 3</p>
+    </section>
+
+    <!-- NAME ENTRY -->
+    <section id="screen-name" class="screen">
+      <h2>What's your name?</h2>
+      <input id="input-name" class="text-input" type="text" maxlength="16" placeholder="YOUR NAME" autocapitalize="characters" />
+      <button id="btn-name-continue" class="btn btn-primary">CONTINUE</button>
+      <button class="btn btn-ghost btn-back" data-back="screen-home">BACK</button>
+    </section>
+
+    <!-- CAMERA CHECK -->
+    <section id="screen-camera" class="screen">
+      <h2>Camera Check</h2>
+      <div class="camera-wrap">
+        <video id="video" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <div class="hand-guide"></div>
+      </div>
+      <div id="camera-status" class="camera-status">Requesting camera&hellip;</div>
+      <ul id="camera-checklist" class="checklist">
+        <li id="check-hand">Hand detected</li>
+        <li id="check-distance">Distance</li>
+        <li id="check-light">Lighting</li>
+      </ul>
+      <button id="btn-camera-ready" class="btn btn-primary" disabled>READY</button>
+      <button class="btn btn-ghost btn-back" data-back="screen-name">BACK</button>
+    </section>
+
+    <!-- PLAY -->
+    <section id="screen-play" class="screen">
+      <div class="hud">
+        <div class="score" id="hud-score">0 — 0</div>
+        <div class="round" id="hud-round">Round 1</div>
+      </div>
+      <div class="camera-wrap play-camera">
+        <video id="video-play" playsinline muted></video>
+        <canvas id="overlay-play"></canvas>
+      </div>
+      <div class="machine-row">
+        <div class="machine-hand" id="machine-hand">🤖</div>
+        <div class="vs">VS</div>
+        <div class="player-hand" id="player-hand">🖐️</div>
+      </div>
+      <div id="countdown" class="countdown"></div>
+      <div id="prob-bars" class="prob-bars">
+        <div class="prob-row"><span>ROCK</span><div class="bar"><i id="bar-rock"></i></div></div>
+        <div class="prob-row"><span>PAPER</span><div class="bar"><i id="bar-paper"></i></div></div>
+        <div class="prob-row"><span>SCISSORS</span><div class="bar"><i id="bar-scissors"></i></div></div>
+      </div>
+      <div id="round-banner" class="round-banner"></div>
+      <button id="btn-next-round" class="btn btn-primary hidden">NEXT ROUND</button>
+    </section>
+
+    <!-- MATCH RESULT -->
+    <section id="screen-match" class="screen">
+      <h2 id="match-title">MACHINE WINS</h2>
+      <div id="match-score" class="match-score">2 — 1</div>
+      <div class="stats-grid">
+        <div><span id="stat-fastest">-</span><label>Fastest Reaction</label></div>
+        <div><span id="stat-average">-</span><label>Average Reaction</label></div>
+        <div><span id="stat-streak">-</span><label>Best Streak</label></div>
+      </div>
+      <button id="btn-play-again" class="btn btn-primary">PLAY AGAIN</button>
+      <button class="btn btn-ghost btn-back" data-back="screen-home">HOME</button>
+    </section>
+
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
