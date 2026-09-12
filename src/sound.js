@@ -3,6 +3,7 @@
 // user gesture, so call primeAudio() from the first tap in the flow.
 
 let ctx = null;
+let unlocked = false;
 
 function getCtx() {
   if (!ctx) {
@@ -14,8 +15,25 @@ function getCtx() {
   return ctx;
 }
 
+// Call from every user tap in the flow, not just the first one -- iOS
+// Safari can auto-suspend the AudioContext again after it's sat idle for a
+// while (camera check + calibration can easily take long enough), and
+// resuming it from code that isn't itself inside a fresh gesture can fail
+// silently. Cheap and idempotent, so over-calling it is harmless.
 export function primeAudio() {
-  getCtx();
+  const audioCtx = getCtx();
+  if (!audioCtx || unlocked) return;
+  unlocked = true;
+  // Merely creating/resuming the context isn't always enough to unlock
+  // audible output on iOS Safari -- some versions only fully unlock after
+  // real (even silent) audio has actually played from within a genuine
+  // user gesture, so play one inaudible blip right here.
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.0001;
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.01);
 }
 
 export function beep({ freq = 440, durationMs = 120, volume = 0.15, type = "sine" } = {}) {

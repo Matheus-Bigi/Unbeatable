@@ -423,10 +423,13 @@ h2 {
 }
 
 /* Both panels use the same source photos (wrist entering from the left,
-   fist pointing right), so left unmodified they'd both face the same way.
-   Mirroring the Machine's side makes the two hands face each other across
-   the VS divider, like two opponents squared up across a table. */
-.machine-panel .hand-photo {
+   fist pointing right). Left unmodified, that's already correct for the
+   Machine (leftmost panel): the arm enters from the outer edge and the
+   fist sits toward the VS divider. The player's panel is on the right, so
+   its copy needs mirroring to get the same "arm from the outer edge, fist
+   toward the divider" relationship -- that's what makes the two hands
+   face each other instead of both pointing the same way. */
+.player-panel .hand-photo {
   transform: scaleX(-1);
 }
 

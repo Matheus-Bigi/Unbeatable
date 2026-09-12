@@ -1,12 +1,12 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=10";
-import { HandTracker } from "./handTracker.js?v=10";
-import { classifyFrame } from "./gestureClassifier.js?v=10";
-import { GameEngine, RoundState } from "./gameEngine.js?v=10";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=10";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=10";
-import * as storage from "./storage.js?v=10";
-import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=10";
-import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=10";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=11";
+import { HandTracker } from "./handTracker.js?v=11";
+import { classifyFrame } from "./gestureClassifier.js?v=11";
+import { GameEngine, RoundState } from "./gameEngine.js?v=11";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=11";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=11";
+import * as storage from "./storage.js?v=11";
+import { showScreen, handImageSrc, updateProbBars, setHandImage, renderRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=11";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=11";
 
 const el = (id) => document.getElementById(id);
 
@@ -97,6 +97,7 @@ function disarmStuckWatchdog() {
 }
 
 stuckRetryBtn.addEventListener("click", () => {
+  primeAudio();
   stuckHelpEl.classList.add("hidden");
   gameEngine.startRound();
 });
@@ -154,6 +155,7 @@ passplayStartBtn.addEventListener("click", async () => {
 });
 
 readyBtn.addEventListener("click", () => {
+  primeAudio();
   if (checkPhase === "environment") {
     enterCalibrationPhase();
   } else {
@@ -163,6 +165,7 @@ readyBtn.addEventListener("click", () => {
 });
 
 calibSkipBtn.addEventListener("click", () => {
+  primeAudio();
   // Calibration is a confidence check, not a gate -- someone whose gestures
   // keep misreading here shouldn't be locked out of playing entirely.
   stopCameraCheckLoop();
@@ -170,11 +173,13 @@ calibSkipBtn.addEventListener("click", () => {
 });
 
 passplayReadyBtn.addEventListener("click", () => {
+  primeAudio();
   playerName = passPlay.players[passPlay.currentIndex].name;
   enterPlay({ autoStart: true }).catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
 });
 
 passplayNextBtn.addEventListener("click", () => {
+  primeAudio();
   passPlay.currentIndex++;
   if (passPlay.currentIndex >= passPlay.players.length) {
     showPassPlayResults();
@@ -184,6 +189,7 @@ passplayNextBtn.addEventListener("click", () => {
 });
 
 passplayAgainBtn.addEventListener("click", () => {
+  primeAudio();
   passPlay.players.forEach((p) => {
     p.matchWins = 0;
     p.fastestMs = null;
@@ -193,6 +199,7 @@ passplayAgainBtn.addEventListener("click", () => {
 });
 
 nextRoundBtn.addEventListener("click", () => {
+  primeAudio();
   nextRoundBtn.classList.add("hidden");
   gameEngine.startRound();
   roundsPlayedInMatch++;
@@ -200,6 +207,7 @@ nextRoundBtn.addEventListener("click", () => {
 });
 
 playAgainBtn.addEventListener("click", () => {
+  primeAudio();
   showScreen("screen-play");
   roundsPlayedInMatch = 0;
   hudRound.textContent = "Round 1";
@@ -523,6 +531,7 @@ async function enterPlay({ autoStart = false } = {}) {
     // also auto-start the countdown; wait for a deliberate tap.
     startMatchBtn.classList.remove("hidden");
     startMatchBtn.onclick = () => {
+      primeAudio();
       startMatchBtn.classList.add("hidden");
       gameEngine.startMatch();
     };
