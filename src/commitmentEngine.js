@@ -63,9 +63,16 @@ export class CommitmentEngine {
     }
 
     if (this.streak[topLabel] >= framesNeeded) {
+      // Measured from "1" (oneMs), not from "GO" (goMs): the arm window
+      // legitimately spans from "1" through the whole delivery window, and
+      // a commit anywhere in that ~2s range is a normal read. Measuring
+      // from GO instead used to collapse the entire pre-GO two-thirds of
+      // that range down to the same floored "10ms" display value (any
+      // nowMs <= goMs floors identically), which is why the reaction time
+      // never appeared to vary even as the underlying commit timing did.
       // A floor rather than a hard 0 -- an exact "0.000s" every time reads
       // as broken/fake rather than "impossibly fast".
-      const reactionMs = Math.max(10, nowMs - goMs);
+      const reactionMs = Math.max(10, nowMs - oneMs);
       this.committed = { label: topLabel, prob: topProb, t: nowMs, reactionMs, tooEarly: nowMs < oneMs };
     }
 

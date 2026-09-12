@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=14";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=14";
-import { PredictionEngine } from "./predictionEngine.js?v=14";
-import { CommitmentEngine } from "./commitmentEngine.js?v=14";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=14";
+import { classifyFrame } from "./gestureClassifier.js?v=15";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=15";
+import { PredictionEngine } from "./predictionEngine.js?v=15";
+import { CommitmentEngine } from "./commitmentEngine.js?v=15";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=15";
 
 export const RoundState = {
   READY: "READY",
@@ -204,7 +204,7 @@ export class GameEngine {
       const softGuess = ranked[0]?.[0] ?? null;
       const { move } = chooseMachineMove(softGuess ? { label: softGuess } : null);
       this.machineMove = move;
-      this._machineReactionMs = this.config.deliveryWindowMs;
+      this._machineReactionMs = this.config.armBeforeGoMs + this.config.deliveryWindowMs;
     }
 
     // The visual reveal always happens right here, at delivery -- whether
@@ -225,7 +225,7 @@ export class GameEngine {
     else if (outcome === "machine") this.score.machine++;
 
     const committed = this.commitment.committed;
-    const reactionMs = committed ? committed.reactionMs : this.config.deliveryWindowMs;
+    const reactionMs = committed ? committed.reactionMs : this.config.armBeforeGoMs + this.config.deliveryWindowMs;
     this.roundReactions.push(reactionMs);
 
     const matchOver = this.score.player >= 2 || this.score.machine >= 2;

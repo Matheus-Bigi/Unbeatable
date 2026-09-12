@@ -1,19 +1,13 @@
-import { dist } from "./landmarkUtils.js?v=14";
+import { dist } from "./landmarkUtils.js?v=15";
 
 const VELOCITY_NORM = 0.9; // normalized-units/sec that counts as "fast" hand motion
 // Fingertip indices (thumb, index, middle, ring, pinky) per MediaPipe hand
-// landmark layout -- their centroid is what actually moves while a gesture
-// is being formed.
+// landmark layout -- these are what actually move while a gesture is being
+// formed.
 const FINGERTIPS = [4, 8, 12, 16, 20];
 
-function centroid(landmarks, indices) {
-  let x = 0;
-  let y = 0;
-  for (const i of indices) {
-    x += landmarks[i].x;
-    y += landmarks[i].y;
-  }
-  return { x: x / indices.length, y: y / indices.length };
+function pickPoints(landmarks, indices) {
+  return indices.map((i) => landmarks[i]);
 }
 
 /**
@@ -21,12 +15,15 @@ function centroid(landmarks, indices) {
  * once the hand has settled into a pose, and trust it less while the hand is
  * still moving quickly through the natural countdown up/down rhythm.
  *
- * Tracks both wrist and fingertip-centroid velocity, not wrist alone: a lot
- * of people form rock/paper/scissors by curling/extending their fingers
- * while keeping the forearm essentially still, so wrist velocity by itself
- * reads "perfectly settled" from the very first frame even while the
- * fingers are still actively changing shape. Either signal moving counts as
- * "not settled yet".
+ * Tracks both wrist and per-fingertip velocity, not wrist alone: a lot of
+ * people form rock/paper/scissors by curling/extending their fingers while
+ * keeping the forearm essentially still, so wrist velocity by itself reads
+ * "perfectly settled" from the very first frame even while the fingers are
+ * still actively changing shape. Fingertip motion is averaged per-tip
+ * displacement, not the centroid of the 5 tips -- fingers curling inward
+ * symmetrically (a very common motion here) can leave their average
+ * position nearly fixed even while every tip is clearly still moving, which
+ * would silently defeat the whole point of this signal.
  */
 export class MotionAnalyzer {
   constructor(maxFrames = 12) {
@@ -35,7 +32,7 @@ export class MotionAnalyzer {
   }
 
   push(landmarks, timestampMs) {
-    this.history.push({ wrist: landmarks[0], fingertips: centroid(landmarks, FINGERTIPS), t: timestampMs });
+    this.history.push({ wrist: landmarks[0], fingertips: pickPoints(landmarks, FINGERTIPS), t: timestampMs });
     if (this.history.length > this.maxFrames) this.history.shift();
   }
 
@@ -47,8 +44,9 @@ export class MotionAnalyzer {
     const dt = (b.t - a.t) / 1000;
     if (dt <= 0) return 0;
     const wristV = dist(a.wrist, b.wrist) / dt;
-    const fingerV = dist(a.fingertips, b.fingertips) / dt;
-    return Math.max(wristV, fingerV);
+    const fingerDisplacements = a.fingertips.map((p, i) => dist(p, b.fingertips[i]));
+    const avgFingerV = fingerDisplacements.reduce((sum, d) => sum + d, 0) / fingerDisplacements.length / dt;
+    return Math.max(wristV, avgFingerV);
   }
 
   /** 1 = hand settled/still, 0 = hand moving fast. */
