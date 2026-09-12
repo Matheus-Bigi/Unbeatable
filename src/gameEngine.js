@@ -1,8 +1,8 @@
-import { classifyFrame } from "./gestureClassifier.js?v=2";
-import { MotionAnalyzer } from "./motionAnalyzer.js?v=2";
-import { PredictionEngine } from "./predictionEngine.js?v=2";
-import { CommitmentEngine } from "./commitmentEngine.js?v=2";
-import { chooseMachineMove, resolveRound } from "./machineAI.js?v=2";
+import { classifyFrame } from "./gestureClassifier.js?v=3";
+import { MotionAnalyzer } from "./motionAnalyzer.js?v=3";
+import { PredictionEngine } from "./predictionEngine.js?v=3";
+import { CommitmentEngine } from "./commitmentEngine.js?v=3";
+import { chooseMachineMove, resolveRound } from "./machineAI.js?v=3";
 
 export const RoundState = {
   READY: "READY",
@@ -148,10 +148,20 @@ export class GameEngine {
     }
   }
 
+  // Locks the Machine's move internally the instant prediction is
+  // confident enough -- that's the actual "psychic" mechanic, and its
+  // timing is what the reaction-time stat reports. It deliberately does
+  // NOT reveal the move on screen yet: showing it immediately would let
+  // the player just watch the Machine's hand and throw the counter to
+  // it, since the real recognition/prediction here isn't fast or precise
+  // enough (yet) to make an early visible reveal actually unreactable.
+  // A non-committal "thinking" cue can still fire so the round still
+  // feels alive before the reveal.
   _lockMachineMove(committed) {
     const { move } = chooseMachineMove(committed);
     this.machineMove = move;
-    this.callbacks.onMachineCommit?.({ move, reactionMs: committed.reactionMs });
+    this._machineReactionMs = committed.reactionMs;
+    this.callbacks.onMachineDeciding?.();
   }
 
   _deliver(nowMs) {
@@ -166,8 +176,14 @@ export class GameEngine {
     if (!this.machineMove) {
       const { move } = chooseMachineMove(null);
       this.machineMove = move;
-      this.callbacks.onMachineCommit?.({ move, reactionMs: this.config.deliveryWindowMs, guess: true });
+      this._machineReactionMs = this.config.deliveryWindowMs;
     }
+
+    // The visual reveal always happens right here, at delivery -- whether
+    // the Machine locked in early (fast internal reaction time) or had to
+    // guess at the deadline, the player only ever sees it at the same
+    // moment their own gesture is judged.
+    this.callbacks.onMachineReveal?.({ move: this.machineMove, reactionMs: this._machineReactionMs });
 
     this.setState(RoundState.RESULT);
     this._finishRound(nowMs);

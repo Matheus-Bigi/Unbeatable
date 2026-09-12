@@ -1,10 +1,11 @@
-import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=2";
-import { HandTracker } from "./handTracker.js?v=2";
-import { GameEngine, RoundState } from "./gameEngine.js?v=2";
-import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=2";
-import { MACHINE_LINES, pickLine } from "./machineAI.js?v=2";
-import * as storage from "./storage.js?v=2";
-import { showScreen, moveEmoji, updateProbBars, setMachineHand, setRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=2";
+import { startCamera, stopCamera, averageBrightness } from "./camera.js?v=3";
+import { HandTracker } from "./handTracker.js?v=3";
+import { GameEngine, RoundState } from "./gameEngine.js?v=3";
+import { DEFAULT_DIFFICULTY } from "./difficultyConfig.js?v=3";
+import { MACHINE_LINES, pickLine } from "./machineAI.js?v=3";
+import * as storage from "./storage.js?v=3";
+import { showScreen, moveEmoji, updateProbBars, setMachineHand, setRoundBanner, drawSkeleton, syncCanvasSize } from "./ui.js?v=3";
+import { primeAudio, countdownBeep, resultBeep } from "./sound.js?v=3";
 
 const el = (id) => document.getElementById(id);
 
@@ -27,6 +28,7 @@ const machineHandEl = el("machine-hand");
 const playerHandEl = el("player-hand");
 const roundBannerEl = el("round-banner");
 const nextRoundBtn = el("btn-next-round");
+const startMatchBtn = el("btn-start-match");
 const stuckHelpEl = el("stuck-help");
 const stuckRetryBtn = el("btn-stuck-retry");
 const playAgainBtn = el("btn-play-again");
@@ -87,7 +89,10 @@ document.querySelectorAll("[data-back]").forEach((btn) => {
   });
 });
 
-homeBtn.addEventListener("click", () => showScreen("screen-name"));
+homeBtn.addEventListener("click", () => {
+  primeAudio();
+  showScreen("screen-name");
+});
 
 nameContinueBtn.addEventListener("click", async () => {
   const value = nameInput.value.trim();
@@ -137,11 +142,14 @@ async function enterCameraCheck() {
   }
 }
 
+const AUTO_ADVANCE_HOLD_MS = 1200;
+
 function startCameraCheckLoop() {
   checkLoopRunning = true;
   handDetectedRecently = 0;
   let lastBrightnessCheck = 0;
   let lightOk = false;
+  let perfectSinceMs = null;
 
   const loop = () => {
     if (!checkLoopRunning) return;
@@ -179,9 +187,21 @@ function startCameraCheckLoop() {
       checkLight.classList.toggle("ok", lightOk);
     }
 
-    if (checkHand.classList.contains("ok") && checkDistance.classList.contains("ok") && lightOk) {
-      cameraStatus.textContent = "Perfect.";
+    const allGood = checkHand.classList.contains("ok") && checkDistance.classList.contains("ok") && lightOk;
+    if (allGood) {
+      perfectSinceMs ??= now;
+      const heldMs = now - perfectSinceMs;
+      cameraStatus.textContent = heldMs > 300 ? `Perfect. Starting in ${Math.ceil((AUTO_ADVANCE_HOLD_MS - heldMs) / 1000)}…` : "Perfect.";
+      if (heldMs >= AUTO_ADVANCE_HOLD_MS) {
+        // Auto-continue once conditions hold steady -- so the player never
+        // has to break their gesture pose to tap READY with their other hand.
+        // Manually tapping READY at any time still works too.
+        stopCameraCheckLoop();
+        enterPlay().catch((err) => console.warn("[UNBEATABLE] enterPlay failed:", err));
+        return;
+      }
     } else {
+      perfectSinceMs = null;
       cameraStatus.textContent = "Show your hand in the frame.";
     }
 
@@ -221,6 +241,7 @@ async function enterPlay() {
     callbacks: {
       onRoundReset() {
         setRoundBanner(roundBannerEl, "", null);
+        machineHandEl.classList.remove("thinking");
         setMachineHand(machineHandEl, "🤖");
         playerHandEl.textContent = "🖐️";
         countdownEl.textContent = "";
@@ -231,6 +252,7 @@ async function enterPlay() {
       },
       onCountdown(label) {
         countdownEl.textContent = label;
+        countdownBeep(label);
         if (label === "GO") setTimeout(() => (countdownEl.textContent = ""), 500);
       },
       onProb(ema) {
@@ -239,11 +261,16 @@ async function enterPlay() {
       onFrame(detection) {
         if (DEBUG) drawSkeleton(playOverlay, detection ? detection.landmarks : null);
       },
-      onMachineCommit({ move }) {
+      onMachineDeciding() {
+        machineHandEl.classList.add("thinking");
+      },
+      onMachineReveal({ move }) {
+        machineHandEl.classList.remove("thinking");
         setMachineHand(machineHandEl, moveEmoji(move), { reveal: true });
       },
       onRoundResult({ outcome, playerMove, machineMove, reactionMs, lateChange, score, matchOver }) {
         disarmStuckWatchdog();
+        resultBeep(outcome);
         playerHandEl.textContent = playerMove ? moveEmoji(playerMove) : "❓";
         hudScore.textContent = `${score.player} — ${score.machine}`;
         storage.recordRound(playerName, { outcome, reactionMs });
@@ -276,7 +303,16 @@ async function enterPlay() {
   });
 
   runPlayOverlayLoop();
-  gameEngine.startMatch();
+
+  // Give the player as long as they need to get positioned before the very
+  // first round of a match -- everything up to here has been automatic
+  // (camera check -> READY -> straight into play), so don't also auto-start
+  // the countdown; wait for a deliberate tap.
+  startMatchBtn.classList.remove("hidden");
+  startMatchBtn.onclick = () => {
+    startMatchBtn.classList.add("hidden");
+    gameEngine.startMatch();
+  };
 }
 
 function runPlayOverlayLoop() {

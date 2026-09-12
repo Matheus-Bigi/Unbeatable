@@ -67,6 +67,10 @@ async function main() {
     await page.waitForSelector("#screen-play.active", { timeout: 5000 });
     console.log("[ok] entered play screen");
 
+    await page.waitForSelector("#btn-start-match:not(.hidden)", { timeout: 5000 });
+    await page.click("#btn-start-match");
+    console.log("[ok] started first match");
+
     // Play through a full Best-of-3 match (Play Again once) to exercise the loop.
     for (let match = 0; match < 2; match++) {
       let rounds = 0;

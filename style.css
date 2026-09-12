@@ -31,12 +31,16 @@ html, body {
 .screen {
   display: none;
   flex: 1;
+  min-height: 0; /* without this, a flex item won't shrink below its content
+    size, so taller-than-viewport content (very common in landscape) gets
+    clipped instead of the screen scrolling */
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
   gap: 14px;
   text-align: center;
+  overflow-y: auto;
 }
 
 .screen.active {
@@ -198,6 +202,14 @@ html, body {
   100% { transform: scale(1) rotate(0); }
 }
 
+/* Plays while the Machine has already decided internally but before the
+   reveal -- signals "it's already reacting" without giving away the move. */
+.machine-hand.thinking { animation: think-pulse 0.5s ease-in-out infinite; }
+@keyframes think-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
 .vs { color: var(--muted); font-weight: 800; font-size: 0.9rem; }
 
 .countdown {
@@ -244,4 +256,19 @@ html, body {
 
 @media (max-width: 380px) {
   .machine-hand, .player-hand { font-size: 3.2rem; }
+}
+
+/* Landscape/panoramic: the portrait-sized stack (tall camera preview +
+   large emoji + countdown) is taller than a landscape viewport, and was
+   getting clipped. Shrink everything that doesn't need to be huge; the
+   .screen overflow-y:auto rule is the safety net for anything that still
+   doesn't fit on a given device. */
+@media (orientation: landscape) {
+  .screen { gap: 8px; padding-top: max(10px, env(safe-area-inset-top)); }
+  .title { font-size: 2rem; }
+  .camera-wrap { max-width: 260px; }
+  .play-camera { width: auto; height: 30vh; max-width: 42vw; }
+  .machine-hand, .player-hand { font-size: 2.6rem; }
+  .countdown { font-size: 2rem; }
+  .match-score { font-size: 1.8rem; }
 }
